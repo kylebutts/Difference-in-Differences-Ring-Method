@@ -99,13 +99,6 @@ plot_est = function(df, dist_t, dist_c) {
 		dist_t + (dist_c - dist_t)/2, max_y, "\u2190 Control Units \u2192",
 	)
 
-	est = mean_t - mean_c
-
-	est_label =
-		list(
-
-		)
-
 	ggplot() +
 		geom_rect(data = rect %>% filter(group == "Treat"),
 							mapping = aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax),
@@ -129,15 +122,15 @@ plot_est = function(df, dist_t, dist_c) {
 							 mapping = aes(x = x, y = y, label = label), size = 5, fill = NA
 		) +
 		# Mean Labels
-		annotate("label", x = dist_t - 0.02, y = mean_t + 0.08, label = "bar(Delta*y)[T]",
+		annotate("label", x = dist_t - 0.02, y = mean_t + 0.1, label = "bar(Delta*y)[T]",
 						 parse=T, hjust = 1, size = 5, color = "#6A6599", fill = NA) +
-		annotate("label", x = dist_c - 0.02, y = mean_c + 0.08, label = "bar(Delta*y)[C]",
+		annotate("label", x = dist_c - 0.02, y = mean_c + 0.1, label = "bar(Delta*y)[C]",
 						parse=T, hjust = 1, size = 5, color = "#79AF97", fill = NA) +
 		# Difference-in-differences Labels
 		annotate("point", x = dist_t, y = c(mean_t, mean_c), size = 2) +
 		annotate("segment", x = dist_t, xend = dist_t, y = mean_t, yend = mean_c,
 						 linetype = "dashed", size = 1.1) +
-		annotate("text", x = dist_t + 0.03, y = mean_c + (mean_t - mean_c)/2,
+		annotate("text", x = dist_t + 0.03, y = mean_c + (mean_t - mean_c)*2/3,
 						 label = "hat(tau)",
 						 parse=T, hjust = 0, size = 7) +
 		scale_color_manual(
@@ -146,6 +139,7 @@ plot_est = function(df, dist_t, dist_c) {
 		scale_shape_manual(
 			values = c("Counterfactual Trend" = 4, "Treatment Effect" = 16)
 		) +
+		scale_x_continuous(expand = expansion(mult = c(0, 0)), limits = c(0, 2)) +
 		labs(
 			y = "Change in Outcome", x = "Distance from Treatment (miles)", shape = NULL, color = NULL
 		) +
@@ -157,13 +151,21 @@ plot_est = function(df, dist_t, dist_c) {
 
 # ---- (a) Correct -------------------------------------------------------------
 
-plot_est(df1, 1, 1.5)
+(plot_a <- plot_est(df1, 1, 1.5))
 
 # ---- (b) Treated too wide ----------------------------------------------------
 
-plot_est(df1, 1.5, 2)
+(plot_b <- plot_est(df1, 1.5, 2))
 
 # ---- (c) Treated too small ----------------------------------------------------
 
-plot_est(df1, 0.5, 1.5)
+(plot_c <- plot_est(df1, 0.5, 1.5))
+
+# ---- Export ------------------------------------------------------------------
+
+ggsave("figures/example_a.jpeg", plot_a, dpi = 300, width = 10, height = 5, bg="white")
+ggsave("figures/example_b.jpeg", plot_b, dpi = 300, width = 10, height = 5, bg="white")
+ggsave("figures/example_c.jpeg", plot_c, dpi = 300, width = 10, height = 5, bg="white")
+
+
 
