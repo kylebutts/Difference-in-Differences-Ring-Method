@@ -94,6 +94,92 @@ This estimation strategy requires researchers to know the exact distance at whic
 Often times, researchers try multiple sets of rings and if the estimated effect remains similar across specifications, they assume the results are `robust'. Panel (d) of \autoref{fig:problems} shows an example of why this a problem. If Panel (c) was the researchers' original specification and Panel (d) was run as a robustness check, then the researcher would be quite confident in their results even though the estimate is too large in both cases. 
 
 
+
+% ------------------------------------------------------------------------------
+\section{Theory}
+% ------------------------------------------------------------------------------
+
+Now, I develop econometric theory to formalize the intuition developed in the previous section. A researcher observes panel data of a random sample of units $i$ at times $t = 0, 1$ located in space at point $\theta_i = (x_i, y_i)$. Treatment occurs at a location $\bar{\theta} = (\bar{x}, \bar{y})$ between periods. Therefore, units differ in their distance to treatment, defined by $\dist_i \equiv \sqrt{(x_i - \bar{x})^2 + (y_i - \bar{y})^2}$ with a distribution function $F$. Since treatment location is often chosen strategically, potential outcomes will have to reflect the fact that trends can change with distance to treatment. Outcomes are given by 
+\[ 
+    Y_{it} = \tau(\dist_i) \one_{t = 1} + \mu_i + \lambda(\dist_i) \one_{t=1} + \varepsilon_{it},    
+\]
+where $\tau(\dist)$ is the treatment effect curve at different distances, $\mu_i$ is unit-specific time-invariant factors, and $\lambda(\dist)$ is the counterfactual trend at different distances from treatment. Since we include the $\lambda$ term, without loss of generality we assume that the error term $\varepsilon_{it}$ is uncorrelated with distance to treatment. Researchers are trying to identify the average treatment effect on units experiencing treatment effects, i.e. $\bar{\tau} = \condexpec{\tau(\dist)}{\tau(\dist) > 0}$ where expectations are with respect to the distribution of distances.
+
+% \begin{assumption}[Random Sampling]
+%     The observed data consists of $\{ Y_{i1}, Y_{i0}, \dist_{i}\}$ which is independent and identically distributed.
+% \end{assumption}
+
+Taking first-differences of our model, we have $\Delta Y_{it} = \tau(\dist_i) + \lambda(\dist_i) + \Delta \varepsilon_{it}$. It is clear that $\tau(\dist_i)$ and $\lambda(\dist_i)$ are not seperately identified unless additional assumptions are imposed. Often times researchers claim that counterfactual trends likely evolve smoothly over distance, so that $\lambda(\dist_i)$ is approximately constant within a certain distance from treatment. This is formalized in the context of our outcome model by the following assumption. 
+
+\begin{assumption}[Local Parallel Trends]\label{assum:parallel}
+    For a distance $\bar{d}$, we say that local parallel trends hold if for all positive $d, d' \leq \bar{d}$, then $\lambda(d) = \lambda(d')$.
+\end{assumption}
+
+This assumption requires that, in the absence of treatment, outcomes would evolve the same at every distance from treatment within a certain maximum distance, $\bar{d}$. If this assumption holds for some $d_c$, then our first-difference equation can be simplified to $\Delta Y_{it} = \tau(\dist_i) + \lambda + \Delta \varepsilon_{it}$ where $\lambda$ is some constant. Therefore, the treatment effect curve $\tau(\dist_i)$ is identifiable up to a constant under Assumption \ref{assum:parallel}. To identify $\tau(\dist_i)$ seperately from the constant, researchers will often claim that treatment effects stop occuring before $\bar{d}$ and therefore there are valid `control units` in the sample. This is formalized in the following assumption. 
+
+\begin{assumption}[Correct $d_t$]\label{assum:dt}
+    A distance $d_t$ satisfies this assumption if (i) for all $d \leq d_t$, $\tau(d) > 0$ and for all $d > d_t$, $\tau(d) = 0$ and (ii) $F(\bar{d}) - F(\bar{d_t}) > 0$
+\end{assumption}
+
+
+The second part of this assumption just requires that there are observation in the control ring.
+
+The `ring method' is the following procedure. Researchers select a pair of distances $d_t < d_c$ which define the ``treated'' and ``control'' groups. These groups are defined by $\mathcal{D}_t \equiv \{ i : 0 < \dist_i \leq d_t \}$ and $\mathcal{D}_c \equiv \{ i : d_t < \dist_i \leq d_c \}$. On the subsample of observations defined by $\mathcal{D} \equiv \mathcal{D}_t \cup \mathcal{D}_c$, they run the following specification:
+\begin{equation}\label{eq:ring_method}
+    \Delta Y_{it} = \beta_0 + \beta_1 \one_{i \in \mathcal{D}_t} + u_{it}.
+\end{equation}
+
+From our potential outcome framework and standard results for regressions involving only indicators, we have the following proposition.\footnote{A similar derivation of part (i) is found in \citet{Sullivan_2017}.}
+
+\begin{proposition}[Decomposition of Ring Estimate]\label{prop:ring_decomp}     
+    \par~\par
+    \begin{enumerate}
+        \item[(i)] The estimate of $\beta_1$ in (\ref{eq:ring_method}) has the following expectation:
+        \[
+            \expec{\hat{\beta}_1} = 
+            \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}} 
+            + \underbrace{\condexpec{\lambda(\dist)}{\mathcal{D}_t} - \condexpec{\lambda(\dist)}{\mathcal{D}_c} }_{\text{Difference in Trends}}.
+        \]
+        
+        \item[(ii)] More, if $d_c$ satisfies Assumption \ref{assum:parallel}, then
+        \[ 
+            \expec{\hat{\beta}_1} = 
+            \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}}.
+        \] 
+    
+        \item[(iii)] If $d_c$ satisfies Assumption \ref{assum:parallel} and $d_t$ satisfies Assumption \ref{assum:dt}, then
+        \[ 
+            \expec{\hat{\beta}_1} = \bar{\tau}.
+        \]
+    \end{enumerate}
+    
+    
+\end{proposition}
+
+Part (i) of this proposition shows that the `treatment effect' estimate is the sum of two differences. The first difference is the difference in average treatment effect among units in the treated ring and units in the control ring. If some units in the control group experience effects from treatment, the average of these effects will be subtracted from the estimate. The second difference is the difference in counterfactual trends between the treated and control rings. Since treatment can be targeted, the treated ring could be on a different trend than units further away. This difference in counterfactual trends is not seperately identifiable from the difference in average treatment effects unless Assumption \ref{assum:parallel} is satisfied. 
+
+Part (ii) says that if $d_c$ satisfies Assumption \ref{assum:parallel}, then the counterfactual trend from part (i) is equal to 0. As discussed above, the decomposition in part (ii) of Proposition \ref{prop:ring_decomp} is not necessarily unbiased estimate for $\bar{\tau}$. First, if $d_t$ is \emph{too wide}, then $\mathcal{D}_t$ contain units that are not affected by treatment. In this case, $\condexpec{\tau(\dist)}{\mathcal{D}_t}$ will be smaller than $\bar{\tau}$ while $\condexpec{\tau(\dist)}{\mathcal{D}_c}$ would be equal to zero. Therefore, $\hat{\beta}_1$ will be biased towards zero if $d_t$ is too wide. Second, if $d_t$ is {too narrow} then the $\mathcal{D}_c$ will contain units that experience treatment effects. It is not clear in this case, though, if $\hat{\beta}_1$ will grow or shrink without knowledge of the $\tau(\dist)$ curve, but typically $\hat{\beta}_1$ will not be an unbiased estimate for $\bar{\tau}$. See the previous section for an example. 
+
+Part (iii) of Proposition \ref{prop:ring_decomp} shows that if $d_t$ is correctly specified as the maximum distance that receives treatment effect, then $\hat{\beta}_1$ will be an unbiased estimate for the average treatment effect among the units affected by treatment. However, Assumption \ref{assum:dt} is a very demanding assumption and unlikely to be known by the researcher unless there are a priori theory dictating $d_t$.\footnote{As an example of a priori theory dictating $d_t$, \citet{Currie_Davis_Greenstone_Walker_2015} uses results from chemical studies on the maximum spread of local pollutants and \citet{Marcus_2021} use the plume length of petroleum smoke.} The following section will improve estimation by allowing non-parametric identification of the entire $\tau(\dist)$ function. An estimate of $\tau(\dist)$ can then be numerically integrated to for an estimate of $\bar{\tau}$.
+
+% ------------------------------------------------------------------------------
+\subsection{Estimation of $\tau(\dist)$}\label{sec:lspartition}
+% ------------------------------------------------------------------------------
+
+In this section, I propose an estimation strategy that non-parametrically identifies the treatment effect curve $\tau(\dist_i)$. To do this, I use partitioning-based least squares estimation and inference methods developed in \citet{Cattaneo_Farrell_Feng_2019,Cattaneo_Crump_Farrell_Feng_2019}. Partition based estimators seperate the support of a covariate $x$, such as $\text{\dist}$, into a set of quantile-spaced rings (e.g. 0-25th percentiles of $X$, 25-50th percentiles, 50-75th, 75-100th) and estimate a polynomial within each interval. In this way, any function can be approximated nonparametrically as the number of intervals and the degree of the polynomial increase asymptotically. 
+
+For a given partition based on quantiles of the data $\{ \mathcal{D}_1, \dots, \mathcal{D}_k \} \equiv \mathcal{D}$, we will estimate the conditional average of $\Delta Y_{it}$ for each interval $\mathcal{D}_i$. These averages are defined as 
+\[
+    \overline{\Delta Y}_j \equiv \sum_{i \in \mathcal{D}_j} \Delta Y_{it} 
+\]
+This will form our estimate $\tau(\dist_i) + \lambda$ under local parallel trends, Assumption \ref{assum:parallel}. To remove $\lambda$, we require an Assumption like \ref{assum:dt}.
+
+\begin{assumption}[$d_t$ is within $\bar{d}$]\label{assum:dt_weak}
+    A distance $\bar{d}$ satisfies this assumption if there is a distance $d_t$ with $0 < d_t < \bar{d}$ such that (i) Assumption \ref{assum:dt} holds and (ii) $F(\bar{d}) - F(d_t) > 0$.
+\end{assumption}
+
+Under Assumptions \ref{assum:parallel} and \ref{assum:dt_weak}, the mean within the last ring $\mathcal{D}_k$ will estimate $\lambda$ as the number of bins $k \to \infty$. The reason for this is simple, as $k \to \infty$, the last bin will have the left end-point $d > d_t$ and therefore $\tau(\dist) = 0$ in $\mathcal{D}_k$. Therefore, estimates of $\tau(\dist_i)$ can be formed for each interval as $\bar{\tau}_j \equiv \overline{\Delta Y}_j - \overline{\Delta Y}_k$. The results of \citet{Cattaneo_Crump_Farrell_Feng_2019} show the large-sample asymptotics of the estimates $\bar{\tau}_j$ which allow valid inference to be performed on these estimates.  
+
 % ------------------------------------------------------------------------------
 \newpage~\bibliography{references.bib}
 % ------------------------------------------------------------------------------
