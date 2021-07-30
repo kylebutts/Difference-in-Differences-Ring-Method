@@ -1,0 +1,102 @@
+\documentclass[10pt]{article}
+
+% Include Theme
+\input{preamble.tex}
+
+% \maketitle info
+\title{Difference-in-Differences with Geocoded Microdata}
+\author{\href{https://kylebutts.com/}{Kyle Butts}\thanks{University of Colorado, Boulder. Email: \href{mailto:kyle.butts@colorado.edu}{kyle.butts@colorado.edu}.} % \ and Other Author}
+}
+\date{\today}
+
+\newcommand{\dist}{\text{Dist}}
+
+% pdf info
+\hypersetup{pdftitle={Example Paper}, pdfauthor={Kyle Butts}}
+
+\begin{document}
+
+% Title Page -------------------------------------------------------------------
+\maketitle
+
+\begin{abstract}
+    This paper formalizes a common approach for estimating effects of treatment at a specific location using geocoded microdata. This estimator compares units immediately next to treatment (an inner-ring) to units just slightly further away (an outer-ring). This paper formalizes the necessary assumptions to identify the average treatment effect among the effected units and illustrates potential pitfalls when these assumptions fail. Since one of these assumptions requires knowledge of exactly how far treatment effects are experienced, I propose a new method that relaxes this assumption and allows for non-parametric estimation using partitioning-based least squares developed in \citet{Cattaneo_Crump_Farrell_Feng_2019}. This method allows for researchers to estimate how treatment effects evolve over distance. Lastly, I illustrate the advantage of this method by revisiting the effects of increased crime risk on home values studied in \citet{Linden_Rockoff_2008}. 
+
+    \par~\par\noindent
+    JEL-Classification: C13, C14, C18
+    \par\noindent
+    Keywords: Spatial, Difference-in-Differences
+    \par
+\end{abstract}
+\newpage
+
+% Paper ------------------------------------------------------------------------
+
+% ------------------------------------------------------------------------------
+\section{Introduction}
+% ------------------------------------------------------------------------------
+
+The rise of microdata with precisely geocoded locations has allowed researchers to begin answering questions about the effects of some specific treatment at a very granular level. What are the effects of highly localized pollutants on child health? Does being within walking distance to a new bus stop improve labor market outcomes? How far do neighborhood shocks such as foreclosures or new construction spread? When treatment is located at a specific point in space, a standard method of evaluating the effects of the treatment is to compare units that are close to treatment to those slightly further away -- what I will label the `Ring method'. This paper fills a gap in the literature by formalizing the assumptions required for identification, highlighting potential pitfalls to the currently used estimator, and provides an improved estimator which requires fewer assumptions. 
+
+The ring method is illustrated in \autoref{fig:example-id}. The center of the figure marks an x which represents the locatin of treatment, e.g. a foreclosed home. Units marked by circles are considered treated due to their proximity to the treatment location, units marked in triangles are considered control units, and then the remaining units are removed from the sample. The appeal of this identification strategy is that since the treated and control units are all very close in physical location, e.g. having access to the same labor market and consumptive amenities, the counterfactual outcomes will approximately be equal between both rings. The ring method compares average changes in outcomes between units in the inner treated ring and the outer control ring to form an estimate for the treatment effect. 
+
+The first contribution of the paper is to fill a gap in the econometrics literature by formalizing the necessary assumptions for unbiased estimates of the average treatment effect on the affected units. The first assumption is the well understood parallel trends assumption for the treated and control units. This allows for average changes in the control units to estimate the counterfactual trend for the treated units.
+
+% Figure: Example ID -----------------------------------------------------------
+
+\begin{figure}[tb]
+    \caption{Rings Method}
+    \label{fig:example-id}
+
+    \begin{adjustbox}{width = 0.4\textwidth, center}
+        \includegraphics[width=\textwidth]{../../figures/example_id.pdf}
+    \end{adjustbox}
+\end{figure}
+
+The second assumption reqires that the radius of the treated ring must be correctly specified as the maximum distance that experiences effects of treatment. If the treated ring is too narrow, then units in the control ring experience effects of treatment and the change among `control' units would no longer identify the counterfactual trend. On the other hand, if the treated ring is too wide, then the 0 treatment effect of some unaffected units are averaged into the change among `treated' units. Therefore results will be attenuated towards zero.\footnote{This is equivalent to randomly assigning treated status to a portion of control units in an experiment.}
+
+Since this second assumption of how far treatment effects extend is difficult to know in most circumstances, I propose a method that replaces this assumption with a more mild assumption by using nonparametric partitioning-based least square regressions \citep{Cattaneo_Farrell_Feng_2019,Cattaneo_Crump_Farrell_Feng_2019}. My proposed methodology estimates the treatment effect curve rather than trying to estimate an average affect. There are many advantages to this approach. First, the new assumption required is much more mild as it only requires that treatment effects become zero somewhere between the distance of 0 and the control ring which does not have to be known by the researcher. Second, this approach allows researcher to get a more complete picture of how the intervention affects units at various distance rather than estimating an ``overall effect''. For example, potentially a new bus-stop creates costs to immediate neighbors while provides benefits for homes slightly further away. Estimation of the treatment effect curve can illustrate these different effects that the ``overall effect'' would mask over. Lastly, this approach allows visual evidence to plausibly validate the parallel trends assumption at the heart of this method, akin to the pre-trends test in event studies.
+
+% ------------------------------------------------------------------------------
+\subsection{Relation to Literature}
+% ------------------------------------------------------------------------------
+
+
+
+
+% ------------------------------------------------------------------------------
+\section{Example of Problem}
+% ------------------------------------------------------------------------------
+
+To illustrate the methodological difficulties in this method, I present an illustriative example. Suppose that an overgrown empty lot in a high-poverty neighborhood is cleaned up by the city and the outcome of interest is home prices. The researcher observes a panel of home sales before and after the lot is cleaned. Cleaning up the lot causes home values to go up directly nearby and as you move away from the lot, the positive treatment effect will decay to zero effect at, say, 3/4 of a mile. Since treatment is targeted to the high poverty neighborhood, comparisons with other neighborhoods in the cities could be biased if the neighborhood home prices are on different trends. Hence, the researcher wants to look only at the homes in the immediate neighborhood.
+
+% Figure: Example problem ------------------------------------------------------
+
+\begin{figure}[tb]
+    \caption{Example of Problems with Ad-Hoc Ring Selection}
+    \label{fig:problems}
+
+    \begin{adjustbox}{width = 1.1\textwidth, center}
+        \includegraphics[width=\textwidth]{../../figures/example.pdf}
+    \end{adjustbox}
+
+    {\footnotesize \emph{Notes:} This figure shows an example of the ring method. The inner ring marks units considered `treated', the outer ring marks units considered `control' units, and the rest of the observations are removed from the sample. Then average changes in outcomes are compared between the treated and the control units to form a treatment effect estimate.}
+\end{figure}
+
+\autoref{fig:problems} shows a plot of simulated data from this example. The black line is treatment effect at different distances from the empty lot and the grey line is the trend in home values. In this simple example, counterfactual trends are assumed to be constant within 1.5 miles from the treated lot. Panel (a) of \autoref{fig:problems} shows the best-case scenario where the treated ring is correctly specified. The two horizontal lines show the average change in outcome in the treated ring and the control ring. The treatment effect estimate, $\hat{\tau}$, is the difference between these two averages. However, this singular number masks over a large amount of treatment effect heterogeneity with units very close to treatment having a treatment effect double that of $\hat{\tau}$ and units near 3/4 miles experience a treatment efffect half as large as $\hat{\tau}$. For this reason, even if a researcher identifies the correct average treatment effect, they are masking a lot of heterogeneity that is potentially interesting. Therefore, later in this paper I recommend non-parametrically estimating the treatment effect as a function of distance rather than using a single indicator. 
+
+However, the researcher does not typically know the distance at which treatment effects stop. Panels (b) and (c) highlights how treatment effect estimates change with a change in ring distances. Panel (b) shows when the `treatment' ring is too wide. In this case, some of the units in the treatment ring receive no effect from treatment and therefore makes the average treament effect among units in the treatment ring smaller. Therefore when the treated ring is too large, the estimated treatment effect is too small.
+
+Panel (c) of \autoref{fig:problems} shows the opposite case, where the treated ring is too narrow. In this case, there are some units in the `control' ring that experience treatment effects. Hence, the average change in outcome among the control unit is too large. This does not, though, decrease the treatment effect as you may suspect. Since the treatment effect decays with distance, the average change in outcome among the more narrow `treatment' ring is larger than the correct specification. The estimated treatment effect in this case grows, but it is not clear more generally whether the treatment effect will increase or decrease. 
+
+This estimation strategy requires researchers to know the exact distance at which treatment effects become zero. Since this is a very demanding assumption, I propose an improved estimator in Section \ref{sec:lspartition} that relaxes this assumption. 
+
+Often times, researchers try multiple sets of rings and if the estimated effect remains similar across specifications, they assume the results are `robust'. Panel (d) of \autoref{fig:problems} shows an example of why this a problem. If Panel (c) was the researchers' original specification and Panel (d) was run as a robustness check, then the researcher would be quite confident in their results even though the estimate is too large in both cases. 
+
+
+% ------------------------------------------------------------------------------
+\newpage~\bibliography{references.bib}
+% ------------------------------------------------------------------------------
+
+
+\end{document}
