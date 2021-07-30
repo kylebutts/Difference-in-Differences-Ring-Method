@@ -37,7 +37,7 @@ set.seed(2021)
 rectangle <- st_sf(
     id = 1,
     geometry = st_sfc(
-        st_polygon(list(rbind(c(0, 0), c(2, 0), c(2, 2), c(0, 2), c(0, 0))))
+        st_polygon(list(rbind(c(0, 0), c(1.5, 0), c(1.5, 1.5), c(0, 1.5), c(0, 0))))
     )
 )
 
@@ -45,12 +45,12 @@ rectangle <- st_sf(
 treat <- st_sf(
     id = 1,
     geometry = st_sfc(
-        st_point(c(1, 1))
+        st_point(c(0.75, 0.75))
     )
 )
 
 # Rings
-treat_ring <- st_buffer(treat, dist = 0.25)
+treat_ring <- st_buffer(treat, dist = 0.2)
 control_ring <- st_difference(st_buffer(treat, dist = 0.5), treat_ring)
 
 # Random sample of points
@@ -68,14 +68,19 @@ points <- st_sf(id = 1:2000, st_sample(rectangle, 2000)) %>%
     geom_sf(data = rectangle, fill = NA) +
     geom_sf(data = treat_ring, fill = NA, alpha = 0.2) +
     geom_sf(data = control_ring, fill = NA, alpha = 0.2) +
-    geom_sf(data = points, mapping = aes(color = group)) +
-    geom_sf(data = treat, color = "black", shape = 3, size = 2) +
+    geom_sf(data = points, mapping = aes(color = group, shape = group)) +
+    geom_sf(data = treat, color = "black", shape = 3, size = 4) +
     coord_sf(datum = NULL) +
     scale_color_manual(
         values = c("Treated" = "#6A6599", "Control" = "#79AF97"),
         na.value = "grey50"
     ) +
-    labs(color = "Treatment Status") +
+    scale_shape_manual(
+        values = c("Treated" = 19, "Control" = 17),
+        na.value = 15
+    ) +
+    labs(color = "Treatment Status", shape = "Treatment Status") +
+    # theme_minimal(base_size = 12) +
     theme_kyle(base_size = 12) +
     theme(
         legend.position = c(0.25, 0.175),
@@ -274,12 +279,12 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
     theme(
         legend.position = "bottom"
     ) &
-    guides(color = guide_legend(override.aes = list(size = 3)))
+    guides(color = guide_legend(override.aes = list(size = 1.5)))
 )
 
 # Export
 
-ggpreview(plot, width = 13, height = 8, device = "pdf", cairo = FALSE)
+ggpreview(plot, width = 13, height = 8, device = "png", cairo = FALSE, bg = "white")
 ggsave("figures/example.pdf", plot, dpi = 300, width = 13, height = 8, bg = "white")
 
 
