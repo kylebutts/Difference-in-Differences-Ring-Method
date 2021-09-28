@@ -7,6 +7,9 @@ library(tidyverse)
 library(here)
 library(fixest)
 library(kfbmisc)
+library(patchwork)
+library(lpridge)
+library(KernSmooth)
 
 
 raw <- haven::read_dta(here("data", "linden_rockoff.dta"))
@@ -17,10 +20,103 @@ df <- raw %>%
         distance = distance / 3,
         dist_post = distance * 10 * close_post_move,
         post = ifelse(post_move, "Post", "Pre"),
-        srn_year = paste(srn, sale_year, sep = "-")
+        srn_year = paste(srn, sale_year, sep = "-"),
+        offdays = sale_date - offender_address_date
     )
 
 df_short <- df %>% filter(distance <= 0.3)
+
+# ---- Replicating Figure 2 ----------------------------------------------------
+
+plot_kernel <- function(bandwidth, kernel, xint) {
+
+    # Pre
+    temp <- df %>% filter(abs(offdays) <= 365 & offdays < 0)
+
+    if(kernel == "Epanechnikov") {
+        pre <- lpridge::lpepa(temp$distance, temp$amt_Price, bandwidth = bandwidth)
+        pre <- data.frame(x = pre$x.out, y = pre$est)
+    } else {
+        pre <- KernSmooth::locpoly(temp$distance, temp$amt_Price, bandwidth = bandwidth)
+        pre <- as.data.frame(pre)
+    }
+
+    # Post
+    temp <- df %>% filter(abs(offdays) <= 365 & offdays >= 0 & offender == 1)
+
+    if(kernel == "Epanechnikov") {
+        post <- lpridge::lpepa(temp$distance, temp$amt_Price, bandwidth = bandwidth)
+        post <- data.frame(x = post$x.out, y = post$est)
+    } else {
+        post <- KernSmooth::locpoly(temp$distance, temp$amt_Price, bandwidth = bandwidth)
+        post <- as.data.frame(post)
+    }
+
+    data = bind_rows(
+        pre %>% mutate(name = "Average Home Price Before Offender Arrives"),
+        post %>% mutate(name = "Average Home Price After Offender Arrives"),
+    )
+
+    # Plot
+    title = glue::glue("Bandwidth of {bandwidth}")
+
+    ggplot() +
+        geom_vline(xintercept = xint, size = 1.2, linetype = "dotted") +
+        geom_line(
+            data = data, aes(x = x, y = y/1000, color = name, linetype = name), size = 1.2
+        ) +
+        labs(
+            x = "Distance from Offender (mi.)", # title = title,
+            y = NULL, color = NULL, linetype = NULL
+        ) +
+        scale_y_continuous(
+            limits = c(120, 155),
+            breaks = c(120, 130, 140, 150),
+            labels = c("$120K", "$130K", "$140K", "$150K")
+        ) +
+        scale_color_manual(
+            values = c("#0a4859", "#f69964"),
+            guide = guide_legend(nrow = 1)
+        ) +
+        kfbmisc::theme_kyle(base_size = 14) +
+        theme(
+            plot.title = element_text(
+                family = "fira_sans", size = 18, margin = margin(b = 4, unit = "pt")
+            ),
+            legend.position = c(0.6, 0.2),
+            legend.background = element_rect(fill = "white")
+        )
+}
+
+p1 <- plot_kernel(0.025, "Epanechnikov", 0.1)
+p2 <- plot_kernel(0.075, "Epanechnikov", 0.15)
+p3 <- plot_kernel(0.125, "Epanechnikov", 0.2)
+
+# Remove y-axis for subfigures (b) and (c)
+no_y <- theme(axis.text.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              axis.title.y = element_blank(),
+              axis.line.y =  element_blank())
+
+p <- (p1 + (p2 + no_y) + (p3 + no_y) +
+          plot_layout(guides = "collect") &
+          theme(
+              legend.position = "bottom",
+              plot.margin = margin(t = 4, l = 4, r = 4, b = 4, unit = "pt")
+          ))
+
+
+
+# kfbmisc::ggpreview(p1, width = 8, height = 5, device = "pdf")
+#kfbmisc::ggpreview(p, width = 12, height = 4, device = "pdf")
+
+ggsave(here::here("figures", "linden_rockoff_epa_025.pdf"), p1, width = 8, height = 5)
+ggsave(here::here("figures", "linden_rockoff_epa_075.pdf"), p2, width = 8, height = 5)
+ggsave(here::here("figures", "linden_rockoff_epa_125.pdf"), p3, width = 8, height = 5)
+ggsave(here::here("figures", "linden_rockoff_nonparametric.pdf"), p, width = 12, height = 4)
+
+#
+
 
 
 
@@ -62,7 +158,7 @@ line <- tibble(
 
 
 # Plot
-p <- ggplot() +
+(p <- ggplot() +
     geom_hline(yintercept = 0, linetype = "dashed") +
     # Line
     geom_line(
@@ -75,113 +171,12 @@ p <- ggplot() +
         color = "#3e3788", fill = "#3e3788", alpha = 0.2
     ) +
     theme_kyle(base_size = 14) +
-    labs(x = "Distance to Offender", y = "Change in log(Home Price)")
+    labs(x = "Distance to Offender", y = "Change in log(Home Price)") +
+    scale_y_continuous())
+
+ggsave(here("figures", "linden_rockoff_did.pdf"), width = 8, height = 2.5)
 
 
-
-
-
-# ---- lspartition -------------------------------------------------------------
-
-# Manual bug fix
-source("code/lspartition/lspfunctions.R")
-source("code/lspartition/lspkselect.R")
-source("code/lspartition/lsplincom.R")
-source("code/lspartition/lsprobust.R")
-
-`Log Price` <- df_short$log_price
-`Distance to Offender` <- df_short$distance
-`Post Move` <- df_short$post
-
-# est <- lsplincom(
-#         y = `Log Price`, x = `Distance to Offender`,
-#         # Groups
-#         G = `Post Move`,
-#         # Post - Pre
-#         R = c(1, -1),
-#         # Options passed to lspartition::lsprobust
-#         # Piecewise constant
-#         m = 1, method = "pp"
-#     ) %>%
-#     .[["Estimate"]] %>%
-#     as.data.frame()
-
-
-knots <- quantile(`Distance to Offender`, probs = seq(0, 1, by = 1/12))
-knots <- c(min(`Distance to Offender`), 0.05, 0.1, 0.15, 0.2, max(`Distance to Offender`))
-
-est <- lsplincom(
-        y = `Log Price`, x = `Distance to Offender`,
-        # Groups
-        G = `Post Move`,
-        # Post - Pre
-        R = c(1, -1),
-        # Manually specify knots
-        knot = knots,
-        # Options passed to lspartition::lsprobust
-        # Piecewise constant
-        m = 1, method = "pp"
-    ) %>%
-    .[["Estimate"]] %>%
-    as.data.frame() %>%
-    mutate(
-        x = X1,
-        tau = tau.cl, se = se.cl,
-        ci_upper = tau + 1.96 * se,
-        ci_lower = tau - 1.96 * se,
-    )
-
-
-est <- est %>% group_by(tau) %>% slice(1)
-
-
-# Create lines for ggplot
-line <- NULL
-
-for(i in 1:nrow(est)) {
-    line <- bind_rows(line,
-        tibble(
-            x = c(knots[i], knots[i+1], knots[i+1]),
-            bin = i,
-            tau = c(est[i,][["tau"]], est[i,][["tau"]], NA),
-            se =  c(est[i,][["se"]], est[i,][["se"]], NA),
-            ci_upper =  c(est[i,][["ci_upper"]], est[i,][["ci_upper"]], NA),
-            ci_lower =  c(est[i,][["ci_lower"]], est[i,][["ci_lower"]], NA),
-        )
-    )
-}
-
-
-# Counterfactual Trend
-count_trend <- line %>%
-    dplyr::filter(bin == max(bin) & !is.na(tau)) %>%
-    .[["tau"]]
-
-line <- line %>% mutate(
-    tau = tau - count_trend,
-    ci_lower = ci_lower - count_trend,
-    ci_upper = ci_upper - count_trend,
-)
-
-# Remove standard errors from last estimate
-line[line$bin == max(line$bin) & !is.na(line$tau), c("ci_upper", "ci_lower")] <- 0
-
-
-(p <- ggplot() +
-    # 0
-    geom_hline(yintercept = 0, linetype = "dashed") +
-    # Line
-    geom_line(
-        data = line, mapping = aes(x = x, y = tau),
-        color = "#3e3788", size = 1.2
-    ) +
-    # CI
-    geom_ribbon(
-        data = line, mapping = aes(x = x, ymin = ci_lower, ymax = ci_upper),
-        color = "#3e3788", fill = "#3e3788", alpha = 0.2
-    ) +
-    theme_kyle(base_size = 14) +
-    labs(x = "Distance to Offender", y = "Change in log(Home Price)"))
 
 
 # ---- binsreg -----------------------------------------------------------------
@@ -197,12 +192,6 @@ est <- binsreg::binsreg(
     # 0th degree polynomial and 0th degree standard errors
     line = c(0,0), ci = c(0,0)
 )
-
-# Uniform comparison
-# binsreg::binspwc(
-# 	y = `Log Price`, x = `Distance to Brothel`, by = `Post`, samebinsby = T,
-# 	pwc = c(0,0)
-# )
 
 post_line <- tibble(est$data.plot$`Group Post`$data.line) %>%
     select(x, bin, post_fit = fit)
@@ -241,6 +230,11 @@ line <- line %>% mutate(
     ci_upper = ci_upper - count_trend,
 )
 
+line[line$bin == max(line$bin), "se"] <- 0
+line[line$bin == max(line$bin), "ci_lower"] <- 0
+line[line$bin == max(line$bin), "ci_upper"] <- 0
+
+
 (p <- ggplot() +
         # 0
         geom_hline(yintercept = 0, linetype = "dashed") +
@@ -255,7 +249,8 @@ line <- line %>% mutate(
             color = "#3e3788", fill = "#3e3788", alpha = 0.2
         ) +
         theme_kyle(base_size = 14) +
-        labs(x = "Distance to Offender", y = "Change in log(Home Price)"))
+        labs(x = "Distance to Offender", y = "Change in log(Home Price)") +
+        scale_y_continuous(limits = c(-0.35, 0.3), breaks = c(-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3)))
 
 # kfbmisc::ggpreview(p, device = "pdf", width = 8, height = 3)
 
