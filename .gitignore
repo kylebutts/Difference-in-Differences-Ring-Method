@@ -2,6 +2,9 @@
 .Rproj.user
 */.DS_Store
 .DS_Store
+.Rapp.history
+.Renviron
+
 
 ## Core latex/pdflatex auxiliary files:
 /latex/.vscode

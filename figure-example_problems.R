@@ -118,17 +118,44 @@ df_long <- df %>% pivot_longer(
 true_te <- df %>% filter(dist <= 0.75) %>% pull(`Treatment Effect`) %>% mean()
 
 
-# Preview of Data
-ggplot() +
-    geom_point(data = df_long, aes(x = dist, y = value, color = name), shape = 19, alpha = 0.8) +
-    scale_color_manual(
-        values = c("#374E55", "#B24745", "#00A1D5", "#DF8F44", "#79AF97", "#6A6599")
-    ) +
-    labs(
-        y = "Change in Outcome", shape = NULL, color = NULL, x = "Distance (miles)"
-    ) +
-    theme_kyle(base_size = 16) +
-    theme(legend.position = "bottom")
+# Data-generating Process Plot
+
+# avoid the line in the drop
+df_long <- bind_rows(
+    df_long %>% filter(dist <= 0.75),
+    tibble(dist = 0.75, name = "Treatment Effect", value = NA),
+    df_long %>% filter(dist > 0.75),
+)
+
+(plot_dgp <- ggplot() +
+        # Potential outcomes
+        geom_line(
+            data = df_long %>% filter(name != "Observed Change"),
+            mapping = aes(x = dist, y = value, color = name),
+            size = 1.5
+        ) +
+        # Color of lines
+        scale_color_manual(
+            values = c("Counterfactual Trend" = "grey60", "Treatment Effect" = "grey20")
+            # values = c("Counterfactual Trend" = "#374E55", "Treatment Effect" = "#B24745")
+        ) +
+        # Make x-axis start at 0
+        scale_x_continuous(expand = expansion(mult = c(0, 0)), limits = c(0, 1.5)) +
+        # Labels
+        labs(
+            title = "Toy Example - Simulated Data",
+            x = "Distance from Treatment (miles)",
+            y = "Change in Outcome",
+            color = NULL
+        ) +
+        # Themeing
+        theme_kyle(base_size = 15, title_pos = "center", has_subtitle = T) +
+        theme(
+            legend.position = "bottom",
+            plot.title = element_text(margin = margin(b = 12, unit = "pt"), size = 14),
+            axis.title.y = element_text(margin = margin(r = 4), hjust = 0),
+            axis.title.x = element_text(margin = margin(t = 4))
+        ))
 
 
 # ---- Plot function -----------------------------------------------------------
@@ -231,6 +258,7 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
         # Color of lines
         scale_color_manual(
             values = c("Counterfactual Trend" = "grey60", "Treatment Effect" = "grey20")
+            # values = c("Counterfactual Trend" = "#374E55", "Treatment Effect" = "#B24745")
         ) +
         # Fill of shaded regions
         scale_fill_manual(
@@ -256,6 +284,7 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
 }
 
 
+
 ## (a) Correct
 
 (plot_a <- plot_est(df, df_long, 0.75, 1.5, "(a) Correct Specification", include_labs = T))
@@ -277,22 +306,134 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
 
 (plot <- (plot_a + plot_b) / (plot_c + plot_d) + plot_layout(guides = "collect") &
     theme(
-        legend.position = "bottom"
+        legend.position = "bottom",
+        plot.background = element_rect(fill = "transparent")
     ) &
     guides(color = guide_legend(override.aes = list(size = 1.5)))
 )
 
 # Export
 
-ggpreview(plot, width = 13, height = 8, device = "png", cairo = FALSE, bg = "white")
+# For Slides
+# ggpreview(plot_a, width = 8, height = 6, device = "pdf", cairo = FALSE, bg = "white")
+ggsave("figures/slides-example_dgp.pdf", plot_dgp, width = 8, height = 6, bg = "white")
+ggsave("figures/slides-example_a.pdf", plot_a, width = 8, height = 6, bg = "white")
+ggsave("figures/slides-example_b.pdf", plot_b, width = 8, height = 6, bg = "white")
+ggsave("figures/slides-example_c.pdf", plot_c, width = 8, height = 6, bg = "white")
+ggsave("figures/slides-example_d.pdf", plot_d, width = 8, height = 6, bg = "white")
+
+
+# For Paper
+# ggpreview(plot, width = 13, height = 8, device = "png", cairo = FALSE, bg = "white")
 ggsave("figures/example.pdf", plot, dpi = 300, width = 13, height = 8, bg = "white")
 
+## For web
+ggsave("figures/rings_ex.svg", plot, dpi = 300, width = 13, height = 8)
 
 
 
 
 
 
+
+# ---- Example did vs. Partition -----------------------------------------------
+
+## Generate Data from DGP
+set.seed(2)
+df_binsreg <- df_long[df_long$name == "Observed Change", ]
+df_binsreg <- df_binsreg[sample.int(nrow(df_binsreg), size = 300), ]
+df_binsreg$value <- df_binsreg$value + rnorm(nrow(df_binsreg), 0, 1.2)
+
+
+## Diff-in-diff
+
+df_binsreg$treat <- df_binsreg$dist <= 0.75
+
+did <- feols(value ~ 1 + i(treat), data = df_binsreg)
+
+coef <- coef(did)[["treat::TRUE"]]
+se <- se(did)[["treat::TRUE"]]
+
+line <- tibble(
+    x = c(0, 0.75, 0.75, .75, 1.5),
+    diff = c(coef, coef, NA, 0, 0),
+    diff_ci_lower = c(coef - 1.96*se, coef - 1.96*se, NA, 0, 0),
+    diff_ci_upper = c(coef + 1.96*se, coef + 1.96*se, NA, 0, 0),
+)
+
+
+# Plot
+(p_did <- ggplot() +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    # Line
+    geom_line(
+        data = line, mapping = aes(x = x, y = diff),
+        color = "#3e3788", size = 1.2
+    ) +
+    # CI
+    geom_ribbon(
+        data = line, mapping = aes(x = x, ymin = diff_ci_lower, ymax = diff_ci_upper),
+        color = "#3e3788", fill = "#3e3788", alpha = 0.2
+    ) +
+    theme_kyle(base_size = 14) +
+    labs(x = "Distance to Treatment", y = "Change in Y"))
+
+
+## Binsreg
+
+est <- binsreg::binsreg(
+    y = df_binsreg$value, x = df_binsreg$dist, binspos = "es",
+    # 0th degree polynomial and 0th degree standard errors
+    line = c(0,0), ci = c(0,0)
+)
+
+line <- tibble(est$data.plot$`Group Full Sample`$data.line) %>%
+    select(x, bin, fit = fit)
+
+se <- tibble(est$data.plot$`Group Full Sample`$data.ci) %>%
+    mutate(se = (ci.r - ci.l)/2/1.96) %>%
+    select(bin, se)
+
+line <- left_join(line, se, by = c("bin"))
+
+line <- line %>%
+    mutate(
+        tau = fit,
+        ci_lower = tau - 1.96 * se,
+        ci_upper = tau + 1.96 * se
+    )
+
+# Counterfactual Trend
+count_trend <- line %>%
+    dplyr::filter(bin == max(bin) & !is.na(tau)) %>%
+    slice(1) %>%
+    .[["tau"]]
+
+line <- line %>% mutate(
+    tau = tau - count_trend,
+    ci_lower = ci_lower - count_trend,
+    ci_upper = ci_upper - count_trend,
+)
+
+(p_partition <- ggplot() +
+        # 0
+        geom_hline(yintercept = 0, linetype = "dashed") +
+        # Line
+        geom_line(
+            data = line, mapping = aes(x = x, y = tau),
+            color = "#3e3788", size = 1.2
+        ) +
+        # CI
+        geom_ribbon(
+            data = line, mapping = aes(x = x, ymin = ci_lower, ymax = ci_upper),
+            color = "#3e3788", fill = "#3e3788", alpha = 0.2
+        ) +
+        theme_kyle(base_size = 14) +
+        labs(x = "Distance to Treatment", y = "Change in Y"))
+
+
+ggsave("figures/slides-example_did.pdf", p_did, width = 8, height = 6, bg = "white")
+ggsave("figures/slides-example_partition.pdf", p_partition, width = 8, height = 6, bg = "white")
 
 
 
