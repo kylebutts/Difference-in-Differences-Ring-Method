@@ -17,18 +17,19 @@
 \begin{document}
 
 % Title Page -------------------------------------------------------------------
+\begin{titlepage}
 \maketitle
 
 \begin{abstract}
     This paper formalizes a common approach for estimating effects of treatment at a specific location using geocoded microdata. This estimator compares units immediately next to treatment (an inner-ring) to units just slightly further away (an outer-ring). This paper formalizes the necessary assumptions to identify the average treatment effect among the effected units and illustrates potential pitfalls when these assumptions fail. Since one of these assumptions requires knowledge of exactly how far treatment effects are experienced, I propose a new method that relaxes this assumption and allows for non-parametric estimation using partitioning-based least squares developed in \citet{Cattaneo_Crump_Farrell_Feng_2019}. This method allows for researchers to estimate how treatment effects evolve over distance. Lastly, I illustrate the advantage of this method by revisiting the effects of increased crime risk on home values studied in \citet{Linden_Rockoff_2008}. 
 
     \par~\par\noindent
-    JEL-Classification: C13, C14, C18
+    {\color{asher}JEL-Classification:} C13, C14, C18
     \par\noindent
-    Keywords: Spatial, Difference-in-Differences
-    \par
+    {\color{asher}Keywords:} Spatial Econometrics, Difference-in-Differences, Nonparametric Estimation
+    \par\vspace{-2.5mm}
 \end{abstract}
-\newpage
+\end{titlepage}
 
 % Paper ------------------------------------------------------------------------
 
@@ -36,11 +37,12 @@
 \section{Introduction}
 % ------------------------------------------------------------------------------
 
-The rise of microdata with precisely geocoded locations has allowed researchers to begin answering questions about the effects of some specific treatment at a very granular level. What are the effects of highly localized pollutants on child health? Does being within walking distance to a new bus stop improve labor market outcomes? How far do neighborhood shocks such as foreclosures or new construction spread? When treatment is located at a specific point in space, a standard method of evaluating the effects of the treatment is to compare units that are close to treatment to those slightly further away -- what I will label the `Ring method'. This paper fills a gap in the literature by formalizing the assumptions required for identification, highlighting potential pitfalls to the currently used estimator, and provides an improved estimator which requires fewer assumptions. 
+The rise of microdata with precisely geocoded locations has allowed researchers to begin answering questions about the effects of spatially-targeted treatments at a very granular level. What are the effects of local pollutants on child health? Does being within walking distance to a new bus stop improve labor market outcomes? How far do neighborhood shocks such as foreclosures or new construction spread? When treatment is located at a specific point in space, a standard method of evaluating the effects of the treatment is to compare units that are close to treatment to those slightly further away -- what I will label the `ring method'. This paper fills a gap in the literature by formalizing the assumptions required for identification, highlighting potential pitfalls to the currently used estimator, and proposes an improved estimator which relaxes these assumptions. 
 
-The ring method is illustrated in \autoref{fig:example-id}. The center of the figure marks an x which represents the locatin of treatment, e.g. a foreclosed home. Units marked by circles are considered treated due to their proximity to the treatment location, units marked in triangles are considered control units, and then the remaining units are removed from the sample. The appeal of this identification strategy is that since the treated and control units are all very close in physical location, e.g. having access to the same labor market and consumptive amenities, the counterfactual outcomes will approximately be equal between both rings. The ring method compares average changes in outcomes between units in the inner treated ring and the outer control ring to form an estimate for the treatment effect. 
+The ring method is illustrated in \autoref{fig:example-id}. The center of the figure marks an x which represents the location of treatment, e.g. a foreclosed home. Units within the inner circle, marked by dots, are considered treated due to their proximity to the treatment location; units between the inner and outer cirlced, marked in triangles, are considered control units; and then the remaining units are removed from the sample. The appeal of this identification strategy is that since the treated and control units are all very close in physical location, e.g. having access to the same labor market and consumptive amenities, the counterfactual untreatedoutcomes will approximately be equal between both rings. The ring estimate for the treatment effect compares average changes in outcomes between units in the inner `treated' ring and the outer `control' ring to form an estimate for the treatment effect, i.e. a difference-in-differences estimator. 
 
-The first contribution of the paper is to fill a gap in the econometrics literature by formalizing the necessary assumptions for unbiased estimates of the average treatment effect on the affected units. The first assumption is the well understood parallel trends assumption for the treated and control units. This allows for average changes in the control units to estimate the counterfactual trend for the treated units.
+The first contribution of the paper is to fill a gap in the econometrics literature by formalizing the necessary assumptions for unbiased estimates of the average treatment effect on the affected units.\footnote{This generalizes the treatment effect on the treated in the case where treatment isn't assigned to specific units.} The first assumption is the well understood parallel trends assumption for the treated and control units. This requires that the \textbf{average} change in the treated ring is equal to the \textbf{average} change in the control ring. This allows the control units to estimate the counterfactual trend for the treated units. The second assumption reqires the researcher to correctly identify how far treatment effects are experienced (the inner ring). If the treated ring is too narrow, then units in the control ring experience effects of treatment and the change among `control' units would no longer identify the counterfactual trend. On the other hand, if the treated ring is too wide, then the zero treatment effect of some unaffected units are averaged into the change among `treated' units. Therefore results will be attenuated towards zero in this case.
+
 
 % Figure: Example ID -----------------------------------------------------------
 
@@ -53,19 +55,25 @@ The first contribution of the paper is to fill a gap in the econometrics literat
     \end{adjustbox}
 \end{figure}
 
-The second assumption reqires that the radius of the treated ring must be correctly specified as the maximum distance that experiences effects of treatment. If the treated ring is too narrow, then units in the control ring experience effects of treatment and the change among `control' units would no longer identify the counterfactual trend. On the other hand, if the treated ring is too wide, then the 0 treatment effect of some unaffected units are averaged into the change among `treated' units. Therefore results will be attenuated towards zero.\footnote{This is equivalent to randomly assigning treated status to a portion of control units in an experiment.}
+Since the second assumption of how far treatment effects extend is difficult to know by reserachers in most circumstances, I propose a method that replaces this assumption with a more mild assumption by using nonparametric partitioning-based least square regressions \citep{Cattaneo_Crump_Farrell_Feng_2019,Cattaneo_Farrell_Feng_2019}. My proposed methodology estimates the treatment effect curve as a function of distance rather than trying to estimate the average treatment effect. The second assumption is relaxed by only requiring that treatment effects become zero somewhere between the distance of 0 and the control ring which does not have to be known by the researcher. However, it requires a more strong assumption that the counterfactual trend is constant across distance (within the control ring).\footnote{Note that the original requirement is that the \emph{average} change in each ring is equal but allows variation across distance}. This assumption, while certainly a more strict assumption, is implied by the informal identifying assumptions used by researchers that the local area is subject to a common set of shocks. While this assumption is not directly testable, the estimator creates a set of point estimates that can be used to visually inspect the plausability of the assumption, akin to the pre-trends test in event study regressions.
 
-Since this second assumption of how far treatment effects extend is difficult to know in most circumstances, I propose a method that replaces this assumption with a more mild assumption by using nonparametric partitioning-based least square regressions \citep{Cattaneo_Farrell_Feng_2019,Cattaneo_Crump_Farrell_Feng_2019}. My proposed methodology estimates the treatment effect curve rather than trying to estimate an average affect. There are many advantages to this approach. First, the new assumption required is much more mild as it only requires that treatment effects become zero somewhere between the distance of 0 and the control ring which does not have to be known by the researcher. Second, this approach allows researcher to get a more complete picture of how the intervention affects units at various distance rather than estimating an ``overall effect''. For example, potentially a new bus-stop creates costs to immediate neighbors while provides benefits for homes slightly further away. Estimation of the treatment effect curve can illustrate these different effects that the ``overall effect'' would mask over. Lastly, this approach allows visual evidence to plausibly validate the parallel trends assumption at the heart of this method, akin to the pre-trends test in event studies.
+The non-parametric approach allows researcher to get a more complete picture of how the intervention affects units at various distance rather than estimating an ``overall effect''. For example, the construction of a new bus-stop potentially creates net costs to immediate neighbors while providing net benefits for homes slightly further away. Estimation of the treatment effect curve can illustrate these different effects that the ``overall effect'' would mask over. In this case, the average effect could be zero even though most units experience non-zero effects.
 
 % ------------------------------------------------------------------------------
 \subsection{Relation to Literature}
 % ------------------------------------------------------------------------------
 
+This paper relates to a few papers that address difficulties with using the rings method for causal effect estimation. In the online appendix, \citet{Gerardi_Rosenblatt_Willen_Yao_2015} discuss the problem that if the treated ring is defined too narrowly, then control units will be affected by treatment causing a biased estimate of the counterfactual trend. \citet{Sullivan_2017} discuss the problem a bit more formally and derive that the bias will be the difference in treatment effects experienced by the `treated' ring and the `control' ring. My paper nests the results of \citet{Sullivan_2017} by including the additional source of bias that can result from a violation of parallel trends. Other researchers have recognized that estimating a single average treatment effect is less informative than a treatment effect curve and use multiple rings to estimate treatment effects at different distances (e.g. \citet{Alexander_Currie_Schnell_2019}). However, this approach is not data-driven and can be prone to problems of specification searching.
 
+\citet{Diamond_McQuade_2019} propose a non-parametric estimator aimed at estimating a treatment effect surface. They use two-dimensions (latitude/longitude) to better approximate a smooth change in counterfactual outcomes (e.g. north-west and south-east from treatment might have different treatment effects). My method, instead, uses a singular measure of distance which pools units at similar distance but different direction from treatment and therefore delivers more precise estimates. However, the treatment effect estimate may mask heterogeneity of effects at the same distance but different direction. If a researcher has a reason to suspect significant heterogeneity, than their proposed estimator will make a better fit.
+
+My paper also contributes to a small literature on difference-in-differences estimators from a spatial lens. \citet{Butts_2021} formalizes the problems with difference-in-differences when treatment effects spillover across space.\footnote{See references therein for other papers that deal with spillovers in difference-in-differences estimation.} They recommend a method similar to the rings method, but did not specify how to choose the number and width of the rings. This paper provies a non-parametric method that applies whenever parallel trends are constant across distance (usually with localized shocks).
+
+% TODO: Include other spatial diff-in-diff papers
 
 
 % ------------------------------------------------------------------------------
-\section{Example of Problem}
+\section{Example of Problem}\label{sec:example}
 % ------------------------------------------------------------------------------
 
 To illustrate the methodological difficulties in this method, I present an illustriative example. Suppose that an overgrown empty lot in a high-poverty neighborhood is cleaned up by the city and the outcome of interest is home prices. The researcher observes a panel of home sales before and after the lot is cleaned. Cleaning up the lot causes home values to go up directly nearby and as you move away from the lot, the positive treatment effect will decay to zero effect at, say, 3/4 of a mile. Since treatment is targeted to the high poverty neighborhood, comparisons with other neighborhoods in the cities could be biased if the neighborhood home prices are on different trends. Hence, the researcher wants to look only at the homes in the immediate neighborhood.
@@ -80,18 +88,16 @@ To illustrate the methodological difficulties in this method, I present an illus
         \includegraphics[width=\textwidth]{../../figures/example.pdf}
     \end{adjustbox}
 
-    {\footnotesize \emph{Notes:} This figure shows an example of the ring method. The inner ring marks units considered `treated', the outer ring marks units considered `control' units, and the rest of the observations are removed from the sample. Then average changes in outcomes are compared between the treated and the control units to form a treatment effect estimate.}
+    {\footnotesize \emph{Notes:} This figure shows an example of the ring method. For each panel, the inner ring marks units considered `treated', the outer ring marks units considered `control' units, and the rest of the observations are removed from the sample. Then average changes in outcomes are compared between the treated and the control units to form a treatment effect estimate.}
 \end{figure}
 
-\autoref{fig:problems} shows a plot of simulated data from this example. The black line is treatment effect at different distances from the empty lot and the grey line is the trend in home values. In this simple example, counterfactual trends are assumed to be constant within 1.5 miles from the treated lot. Panel (a) of \autoref{fig:problems} shows the best-case scenario where the treated ring is correctly specified. The two horizontal lines show the average change in outcome in the treated ring and the control ring. The treatment effect estimate, $\hat{\tau}$, is the difference between these two averages. However, this singular number masks over a large amount of treatment effect heterogeneity with units very close to treatment having a treatment effect double that of $\hat{\tau}$ and units near 3/4 miles experience a treatment efffect half as large as $\hat{\tau}$. For this reason, even if a researcher identifies the correct average treatment effect, they are masking a lot of heterogeneity that is potentially interesting. Therefore, later in this paper I recommend non-parametrically estimating the treatment effect as a function of distance rather than using a single indicator. 
+\autoref{fig:problems} shows a plot of simulated data from this example. The black line is treatment effect at different distances from the empty lot and the grey line is the underlying (constant) counterfactual change in home prices, normalized to 0. In this simple example, counterfactual trends are assumed to be constant within 1.5 miles from the treated lot. Panel (a) of \autoref{fig:problems} shows the best-case scenario where the treated ring is correctly specified. The two horizontal lines show the average change in outcome in the treated ring and the control ring. The treatment effect estimate, $\hat{\tau}$, is the difference between these two averages. However, this singular number masks over a large amount of treatment effect heterogeneity with units very close to treatment having a treatment effect double that of $\hat{\tau}$ and units near 3/4 miles experience a treatment efffect half as large as $\hat{\tau}$. For this reason, even if a researcher identifies the correct average treatment effect, they are masking a lot of heterogeneity that is potentially interesting. Therefore, later in this paper I recommend non-parametrically estimating the treatment effect curve as a function of distance rather than using average effect. 
 
-However, the researcher does not typically know the distance at which treatment effects stop. Panels (b) and (c) highlights how treatment effect estimates change with a change in ring distances. Panel (b) shows when the `treatment' ring is too wide. In this case, some of the units in the treatment ring receive no effect from treatment and therefore makes the average treament effect among units in the treatment ring smaller. Therefore when the treated ring is too large, the estimated treatment effect is too small.
+However, the researcher does not typically know the distance at which treatment effects stop. Panels (b) and (c) highlights how treatment effect estimates change with a change in ring distances. Panel (b) shows when the `treatment' ring is too wide. In this case, some of the units in the treatment ring receive no effect from treatment and therefore makes the average treament effect among units in the treatment ring smaller. Therefore when the treated ring is too large, the estimated treatment effect is too small. Panel (c) of \autoref{fig:problems} shows the opposite case, where the treated ring is too narrow. In this case, there are some units in the `control' ring that experience treatment effects. Hence, the average change in outcome among the control unit is too large. This does not, though, decrease the treatment effect as one may suspect. Since the treatment effect decays with distance, the average change in outcome among the more narrow `treatment' ring is larger than the correct specification. The estimated treatment effect in this case grows, but it is not clear more generally whether the treatment effect will increase or decrease.\footnote{This primarily depends on the curvature of the treatment effect curve.} 
 
-Panel (c) of \autoref{fig:problems} shows the opposite case, where the treated ring is too narrow. In this case, there are some units in the `control' ring that experience treatment effects. Hence, the average change in outcome among the control unit is too large. This does not, though, decrease the treatment effect as you may suspect. Since the treatment effect decays with distance, the average change in outcome among the more narrow `treatment' ring is larger than the correct specification. The estimated treatment effect in this case grows, but it is not clear more generally whether the treatment effect will increase or decrease. 
+From these three examples, it's clear that the estimation strategy requires researchers to know the exact distance at which treatment effects become zero. Since this is a very demanding assumption, I propose an improved estimator in \autoref{sec:lspartition} that relaxes this assumption. 
 
-This estimation strategy requires researchers to know the exact distance at which treatment effects become zero. Since this is a very demanding assumption, I propose an improved estimator in Section \ref{sec:lspartition} that relaxes this assumption. 
-
-Often times, researchers try multiple sets of rings and if the estimated effect remains similar across specifications, they assume the results are `robust'. Panel (d) of \autoref{fig:problems} shows an example of why this a problem. If Panel (c) was the researchers' original specification and Panel (d) was run as a robustness check, then the researcher would be quite confident in their results even though the estimate is too large in both cases. 
+Often times, researchers try multiple sets of rings and if the estimated effect remains similar across specifications, they assume the results are `robust'. Panel (d) of \autoref{fig:problems} shows an example of why this a problem. If Panel (c) was the researchers' original specification and Panel (d) was run as a robustness check, then the researcher would be quite confident in their results even though the estimate is too large in both cases. Now, I turn to econometric theory in order to formalize the intuition developed in this section.
 
 
 
@@ -99,90 +105,246 @@ Often times, researchers try multiple sets of rings and if the estimated effect 
 \section{Theory}
 % ------------------------------------------------------------------------------
 
-Now, I develop econometric theory to formalize the intuition developed in the previous section. A researcher observes panel data of a random sample of units $i$ at times $t = 0, 1$ located in space at point $\theta_i = (x_i, y_i)$. Treatment occurs at a location $\bar{\theta} = (\bar{x}, \bar{y})$ between periods. Therefore, units differ in their distance to treatment, defined by $\dist_i \equiv \sqrt{(x_i - \bar{x})^2 + (y_i - \bar{y})^2}$ with a distribution function $F$. Since treatment location is often chosen strategically, potential outcomes will have to reflect the fact that trends can change with distance to treatment. Outcomes are given by 
-\[ 
-    Y_{it} = \tau(\dist_i) \one_{t = 1} + \mu_i + \lambda(\dist_i) \one_{t=1} + \varepsilon_{it},    
-\]
-where $\tau(\dist)$ is the treatment effect curve at different distances, $\mu_i$ is unit-specific time-invariant factors, and $\lambda(\dist)$ is the counterfactual trend at different distances from treatment. Since we include the $\lambda$ term, without loss of generality we assume that the error term $\varepsilon_{it}$ is uncorrelated with distance to treatment. Researchers are trying to identify the average treatment effect on units experiencing treatment effects, i.e. $\bar{\tau} = \condexpec{\tau(\dist)}{\tau(\dist) > 0}$ where expectations are with respect to the distribution of distances.
+Now, I develop econometric theory to formalize the intuition developed in the previous section. A researcher observes panel data of a random sample of units $i$ at times $t = 0, 1$ located in space at point $\theta_i = (x_i, y_i)$. Treatment occurs at a location $\bar{\theta} = (\bar{x}, \bar{y})$ between periods. Therefore, units differ in their distance to treatment, defined by $\dist_i \equiv d(\theta_i, \bar{\theta})$ for some distance metric $d$ (e.g. Euclidean or spherical distance) with a distribution function $F$. Since treatment location is often chosen strategically, potential outcomes will have to reflect the fact that counterfactual trends and treatment effects can change with distance to treatment. Outcomes are given by 
+\begin{equation}\label{eq:model}
+    Y_{it} = \mu_i + \tau(\dist_i) \one_{t = 1} + \lambda(\dist_i) \one_{t=1} + \varepsilon_{it},    
+\end{equation}
+where $\mu_i$ is unit-specific time-invariant factors, $\tau(\dist)$ is the average treatment effect curve at different distances, and $\lambda(\dist)$ is the average counterfactual trend at different distances from treatment.\footnote{This does not restrict treatment effect heterogeneity as, for example, $\tau_i - \tau(\dist_i)$ can be included in the error term.} For example, a common setting is that of a latent factor model, $\lambda_i F_t$ where $\lambda_i$ is a $k$-dimensional row vector of common factors and $F_t$ is a $k$-dimensional column vector of period shocks. In this case, $\lambda(d) = \condexpec{\lambda_i F_1}{\dist_i = d}$. Without loss of generality, we assume that the error term $\varepsilon_{it}$ is uncorrelated with distance to treatment. Researchers are trying to identify the average treatment effect on units experiencing treatment effects, i.e. $\bar{\tau} = \condexpec{\tau(\dist_i)}{\tau(\dist_i) > 0}$ where expectations are with respect to the distribution of distances.
 
-% \begin{assumption}[Random Sampling]
-%     The observed data consists of $\{ Y_{i1}, Y_{i0}, \dist_{i}\}$ which is independent and identically distributed.
-% \end{assumption}
+\begin{assumption}[Random Sampling]
+    The observed data consists of $\{ Y_{i1}, Y_{i0}, \dist_{i}\}$ which is independent and identically distributed.
+\end{assumption}
 
-Taking first-differences of our model, we have $\Delta Y_{it} = \tau(\dist_i) + \lambda(\dist_i) + \Delta \varepsilon_{it}$. It is clear that $\tau(\dist_i)$ and $\lambda(\dist_i)$ are not seperately identified unless additional assumptions are imposed. Often times researchers claim that counterfactual trends likely evolve smoothly over distance, so that $\lambda(\dist_i)$ is approximately constant within a certain distance from treatment. This is formalized in the context of our outcome model by the following assumption. 
+Taking first-differences of our model, we have $\Delta Y_{it} = \tau(\dist_i) + \lambda(\dist_i) + \Delta \varepsilon_{it}$. It is clear that $\tau(\dist_i)$ and $\lambda(\dist_i)$ are not seperately identified unless additional assumptions are imposed. The central identifying assumption that researchers claim when using the ring method is that counterfactual trends likely evolve smoothly over distance, so that $\lambda(\dist_i)$ is approximately constant within a small distance from treatment. This is formalized in the context of our outcome model by the following assumption. 
 
 \begin{assumption}[Local Parallel Trends]\label{assum:parallel}
     For a distance $\bar{d}$, we say that local parallel trends hold if for all positive $d, d' \leq \bar{d}$, then $\lambda(d) = \lambda(d')$.
 \end{assumption}
 
-This assumption requires that, in the absence of treatment, outcomes would evolve the same at every distance from treatment within a certain maximum distance, $\bar{d}$. If this assumption holds for some $d_c$, then our first-difference equation can be simplified to $\Delta Y_{it} = \tau(\dist_i) + \lambda + \Delta \varepsilon_{it}$ where $\lambda$ is some constant. Therefore, the treatment effect curve $\tau(\dist_i)$ is identifiable up to a constant under Assumption \ref{assum:parallel}. To identify $\tau(\dist_i)$ seperately from the constant, researchers will often claim that treatment effects stop occuring before $\bar{d}$ and therefore there are valid `control units` in the sample. This is formalized in the following assumption. 
+This assumption requires that, in the absence of treatment, outcomes would evolve the same at every distance from treatment within a certain maximum distance, $\bar{d}$. This assumption requires that treatment location can't be targeted based on trends \emph{within a small-area/neighborhood}. Note that \nameref{assum:parallel} implies the standard assumption that parallel trends holds \emph{on average} between the treated and control rings:
 
-\begin{assumption}[Correct $d_t$]\label{assum:dt}
-    A distance $d_t$ satisfies this assumption if (i) for all $d \leq d_t$, $\tau(d) > 0$ and for all $d > d_t$, $\tau(d) = 0$ and (ii) $F(\bar{d}) - F(\bar{d_t}) > 0$
+\begin{assumption}[Average Parallel Trends]\label{assum:parallel_weak}
+    For a pair of distances $d_t$ and $d_c$, we say that average parallel trends hold if $\condexpec{\lambda_d}{0 \leq d \leq d_t} = \condexpec{\lambda_d}{d_t < d \leq d_c}$.
 \end{assumption}
 
+If \nameref{assum:parallel} holds for some $d_c$, then our first-difference equation can be simplified to $\Delta Y_{it} = \tau(\dist_i) + \lambda + \Delta \varepsilon_{it}$ where $\lambda$ is some constant for units in the subsample $\mathcal{D} \equiv \{i \ : \ \dist_i \leq d_c \} $. Therefore, the treatment effect curve $\tau(\dist_i)$ is identifiable up to a constant under Assumption \ref{assum:parallel}. To identify $\tau(\dist_i)$ seperately from the constant, researchers will often claim that treatment effects stop occuring before some distance $d_t < d_c$. This is formalized in  the following assumption. 
 
-The second part of this assumption just requires that there are observation in the control ring.
+\begin{assumption}[Correct $d_t$]\label{assum:dt}
+    A distance $d_t$ satisfies this assumption if (i) for all $d \leq d_t$, $\tau(d) > 0$ and for all $d > d_t$, $\tau(d) = 0$ and (ii) $F(d_c) - F(d_t) > 0$.
+\end{assumption}
 
-The `ring method' is the following procedure. Researchers select a pair of distances $d_t < d_c$ which define the ``treated'' and ``control'' groups. These groups are defined by $\mathcal{D}_t \equiv \{ i : 0 < \dist_i \leq d_t \}$ and $\mathcal{D}_c \equiv \{ i : d_t < \dist_i \leq d_c \}$. On the subsample of observations defined by $\mathcal{D} \equiv \mathcal{D}_t \cup \mathcal{D}_c$, they run the following specification:
+With this assumption, the first difference equation simplifies to $\Delta Y_{it} = \lambda + \Delta \varepsilon_{it}$ for units with $d_t < \dist_i < d_c$. These units therefore identify $\lambda$. The `ring method' is the following procedure. Researchers select a pair of distances $d_t < d_c$ which define the ``treated'' and ``control'' groups. These groups are defined by $\mathcal{D}_t \equiv \{ i : 0 \leq \dist_i \leq d_t \}$ and $\mathcal{D}_c \equiv \{ i : d_t < \dist_i \leq d_c \}$. On the subsample of observations defined by $\mathcal{D} \equiv \mathcal{D}_t \cup \mathcal{D}_c$, they estimate the following regression:
+
 \begin{equation}\label{eq:ring_method}
     \Delta Y_{it} = \beta_0 + \beta_1 \one_{i \in \mathcal{D}_t} + u_{it}.
 \end{equation}
 
-From our potential outcome framework and standard results for regressions involving only indicators, we have the following proposition.\footnote{A similar derivation of part (i) is found in \citet{Sullivan_2017}.}
+From standard results for regressions involving only indicators, $\hat{\beta}_1$ is the difference-in-differences estimator:
+\[
+    \expec{\hat{\beta}_1} = \condexpec{\Delta Y_{it}}{\mathcal{D}_t} - \condexpec{\Delta Y_{it}}{\mathcal{D}_c}.
+\]
+This estimate is decomposed in the following proposition.\footnote{A similar derivation of part (i) is found in \citet{Sullivan_2017} but does not include difference in parallel trends.}
 
-\begin{proposition}[Decomposition of Ring Estimate]\label{prop:ring_decomp}     
-    \par~\par
+\begin{proposition}[Decomposition of Ring Estimate]\label{prop:ring_decomp}  
+    Given that units follow model (\ref{eq:model}),
     \begin{enumerate}
         \item[(i)] The estimate of $\beta_1$ in (\ref{eq:ring_method}) has the following expectation:
-        \[
-            \expec{\hat{\beta}_1} = 
-            \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}} 
-            + \underbrace{\condexpec{\lambda(\dist)}{\mathcal{D}_t} - \condexpec{\lambda(\dist)}{\mathcal{D}_c} }_{\text{Difference in Trends}}.
-        \]
+        \begin{align*}
+            \expec{\hat{\beta}_1} &= \condexpec{\Delta Y_{it}}{\mathcal{D}_t} - \condexpec{\Delta Y_{it}}{\mathcal{D}_c} \\
+            &=  \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}} + \underbrace{\condexpec{\lambda(\dist)}{\mathcal{D}_t} - \condexpec{\lambda(\dist)}{\mathcal{D}_c} }_{\text{Difference in Trends}}.
+        \end{align*}
         
-        \item[(ii)] More, if $d_c$ satisfies Assumption \ref{assum:parallel}, then
+        \item[(ii)] If $d_c$ satisfies \nameref{assum:parallel} or, more weakly, if $d_t$ and $d_c$ satisfy \nameref{assum:parallel_weak}, then
         \[ 
             \expec{\hat{\beta}_1} = 
             \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}}.
         \] 
     
-        \item[(iii)] If $d_c$ satisfies Assumption \ref{assum:parallel} and $d_t$ satisfies Assumption \ref{assum:dt}, then
+        \item[(iii)] If $d_c$ satisfies \nameref{assum:parallel} and $d_t$ satisfies Assumption \ref{assum:dt}, then
         \[ 
             \expec{\hat{\beta}_1} = \bar{\tau}.
         \]
     \end{enumerate}
-    
-    
 \end{proposition}
 
-Part (i) of this proposition shows that the `treatment effect' estimate is the sum of two differences. The first difference is the difference in average treatment effect among units in the treated ring and units in the control ring. If some units in the control group experience effects from treatment, the average of these effects will be subtracted from the estimate. The second difference is the difference in counterfactual trends between the treated and control rings. Since treatment can be targeted, the treated ring could be on a different trend than units further away. This difference in counterfactual trends is not seperately identifiable from the difference in average treatment effects unless Assumption \ref{assum:parallel} is satisfied. 
+Part (i) of this proposition shows that the estimate is the sum of two differences. The first difference is the difference in average treatment effect among units in the treated ring and units in the control ring. The second difference is the difference in counterfactual trends between the treated and control rings. This presents two possible problems. If some units in the control group experience effects from treatment, the average of these effects will be subtracted from the estimate. Second, since treatment can be targeted, the treated ring could be on a different trend than units further away. This difference in counterfactual trends is not seperately identifiable from the difference in average treatment effects unless \nameref{assum:parallel} is satisfied. 
 
-Part (ii) says that if $d_c$ satisfies Assumption \ref{assum:parallel}, then the counterfactual trend from part (i) is equal to 0. As discussed above, the decomposition in part (ii) of Proposition \ref{prop:ring_decomp} is not necessarily unbiased estimate for $\bar{\tau}$. First, if $d_t$ is \emph{too wide}, then $\mathcal{D}_t$ contain units that are not affected by treatment. In this case, $\condexpec{\tau(\dist)}{\mathcal{D}_t}$ will be smaller than $\bar{\tau}$ while $\condexpec{\tau(\dist)}{\mathcal{D}_c}$ would be equal to zero. Therefore, $\hat{\beta}_1$ will be biased towards zero if $d_t$ is too wide. Second, if $d_t$ is {too narrow} then the $\mathcal{D}_c$ will contain units that experience treatment effects. It is not clear in this case, though, if $\hat{\beta}_1$ will grow or shrink without knowledge of the $\tau(\dist)$ curve, but typically $\hat{\beta}_1$ will not be an unbiased estimate for $\bar{\tau}$. See the previous section for an example. 
+Part (ii) says that if $d_c$ satisfies \nameref{assum:parallel}, then the difference in trends from part (i) is equal to 0. As discussed above, the decomposition in part (ii) of Proposition \ref{prop:ring_decomp} is not necessarily unbiased estimate for $\bar{\tau}$. First, if $d_t$ is \emph{too wide}, then $\mathcal{D}_t$ contain units that are not affected by treatment. In this case, $\condexpec{\tau(\dist)}{\mathcal{D}_t}$ will be smaller than $\bar{\tau}$ while $\condexpec{\tau(\dist)}{\mathcal{D}_c}$ would be equal to zero. Therefore, $\hat{\beta}_1$ will be biased towards zero if $d_t$ is too wide. Second, if $d_t$ is {too narrow} then the $\mathcal{D}_c$ will contain units that experience treatment effects. It is not clear in this case, though, if $\hat{\beta}_1$ will grow or shrink without knowledge of the $\tau(\dist)$ curve, but typically $\hat{\beta}_1$ will not be an unbiased estimate for $\bar{\tau}$. See the previous section for an example. 
 
-Part (iii) of Proposition \ref{prop:ring_decomp} shows that if $d_t$ is correctly specified as the maximum distance that receives treatment effect, then $\hat{\beta}_1$ will be an unbiased estimate for the average treatment effect among the units affected by treatment. However, Assumption \ref{assum:dt} is a very demanding assumption and unlikely to be known by the researcher unless there are a priori theory dictating $d_t$.\footnote{As an example of a priori theory dictating $d_t$, \citet{Currie_Davis_Greenstone_Walker_2015} uses results from chemical studies on the maximum spread of local pollutants and \citet{Marcus_2021} use the plume length of petroleum smoke.} The following section will improve estimation by allowing non-parametric identification of the entire $\tau(\dist)$ function. An estimate of $\tau(\dist)$ can then be numerically integrated to for an estimate of $\bar{\tau}$.
+Part (iii) of Proposition \ref{prop:ring_decomp} shows that if $d_t$ is correctly specified as the maximum distance that receives treatment effect, then $\hat{\beta}_1$ will be an unbiased estimate for the average treatment effect among the units affected by treatment. However, Assumption \ref{assum:dt} is a very demanding assumption and unlikely to be known by the researcher unless there are \emph{a priori} theory dictating $d_t$.\footnote{As an example, \citet{Currie_Davis_Greenstone_Walker_2015} uses results from scientific research on the maximum spread of local pollutants and \citet{Marcus_2021} use the plume length of petroleum smoke.} 
+
+The following section will improve estimation by allowing non-parametric identification of the entire $\tau(\dist)$ function. An estimate of $\tau(\dist)$ can then be numerically integrated to for an estimate of $\bar{\tau}$.
+
+
 
 % ------------------------------------------------------------------------------
-\subsection{Estimation of $\tau(\dist)$}\label{sec:lspartition}
+\section{Non-parametric Estimation of the Treatment Effect Curve}\label{sec:lspartition}
 % ------------------------------------------------------------------------------
 
-In this section, I propose an estimation strategy that non-parametrically identifies the treatment effect curve $\tau(\dist_i)$. To do this, I use partitioning-based least squares estimation and inference methods developed in \citet{Cattaneo_Farrell_Feng_2019,Cattaneo_Crump_Farrell_Feng_2019}. Partition based estimators seperate the support of a covariate $x$, such as $\text{\dist}$, into a set of quantile-spaced rings (e.g. 0-25th percentiles of $X$, 25-50th percentiles, 50-75th, 75-100th) and estimate a polynomial within each interval. In this way, any function can be approximated nonparametrically as the number of intervals and the degree of the polynomial increase asymptotically. 
+% ------------------------------------------------------------------------------
+\subsection{Identification}
+% ------------------------------------------------------------------------------
 
-For a given partition based on quantiles of the data $\{ \mathcal{D}_1, \dots, \mathcal{D}_k \} \equiv \mathcal{D}$, we will estimate the conditional average of $\Delta Y_{it}$ for each interval $\mathcal{D}_i$. These averages are defined as 
+In this section, I propose an estimation strategy that non-parametrically identifies the treatment effect curve $\tau(\dist_i)$ using partitioning-based least squares estimation and inference methods developed in \citet{Cattaneo_Crump_Farrell_Feng_2019, Cattaneo_Farrell_Feng_2019}. Partition-based estimators seperate the support of a covariate $x_i$ (e.g. $\dist_i$) into a set of quantile-spaced intervals (e.g. 0-25th percentiles of $\dist_i$, 25-50th, 50-75th, and 75-100th). Then the conditional $\condexpec{Y_i}{x_i}$ is estimated seperately within each interval as a $k$-degree polynomial of the covariate $x_i$.
+
+For a given $d_c$, we will form a partition of our sample $\mathcal{D} = \{ i : \dist_i \leq d_c \}$ into $L$ intervals based on quantiles of the distance variable. Denote a given quantile as $\mathcal{D}_j \equiv\{ i : F_n^{-1}(\frac{j-1}{L}) \leq \dist_i < F_n^{-1}(\frac{j}{L}) \}$ where $F_n$ is the empirical distribution of $\dist$. Let $\{ \mathcal{D}_1, \dots, \mathcal{D}_L \}$ be the collection of the $L$ intervals. This paper will impose $k = 0$ which will predict $\Delta Y_{it}$ with a constant within each interval.\footnote{Approximation can be made arbitrarily close to the true conditional expectation function by \emph{either} increasing the number of intervals \emph{or} by increasing the polynomial order to infinity, so setting $k = 0$ does not impose any cost.} 
+
+These averages are defined as 
 \[
-    \overline{\Delta Y}_j \equiv \sum_{i \in \mathcal{D}_j} \Delta Y_{it} 
+    \overline{\Delta Y}_j \equiv \frac{1}{n_j} \sum_{i \in \mathcal{D}_j} \Delta Y_{it},
 \]
-This will form our estimate $\tau(\dist_i) + \lambda$ under local parallel trends, Assumption \ref{assum:parallel}. To remove $\lambda$, we require an Assumption like \ref{assum:dt}.
+where the number of units in bin $\mathcal{D}_j$ is $n_j \approx n/L$. Our estimator for $\condexpec{\Delta Y_{it}}{\dist_i}$ is then given by
+\[
+    \widehat{\Delta Y_{it}} = \sum_{j = 1}^{L} \one_{i \in \mathcal{D}_j} \overline{\Delta Y}_j
+\]
+As the number of intervals approach infinity, this estimate will approach $\condexpec{\Delta Y_{it}}{\dist = d}$ in a mean-squared error sense. Under \nameref{assum:parallel}, $\condexpec{\Delta Y_{it}}{\dist = d} \equiv \condexpec{\tau(\dist)}{\dist = d} + \lambda$. To remove $\lambda$, we require an assumption much less strict than assumption \ref{assum:dt}.
 
-\begin{assumption}[$d_t$ is within $\bar{d}$]\label{assum:dt_weak}
-    A distance $\bar{d}$ satisfies this assumption if there is a distance $d_t$ with $0 < d_t < \bar{d}$ such that (i) Assumption \ref{assum:dt} holds and (ii) $F(\bar{d}) - F(d_t) > 0$.
+\begin{assumption}[$d_t$ is within $d_c$]\label{assum:dt_weak}
+    A distance $d_c$ satisfies this assumption if there exists a distance $d_t$ with $0 < d_t < d_c$ such that (i) Assumption \ref{assum:dt} holds and (ii) $F(d_c) - F(d_t) > 0$.
 \end{assumption}
 
-Under Assumptions \ref{assum:parallel} and \ref{assum:dt_weak}, the mean within the last ring $\mathcal{D}_k$ will estimate $\lambda$ as the number of bins $k \to \infty$. The reason for this is simple, as $k \to \infty$, the last bin will have the left end-point $d > d_t$ and therefore $\tau(\dist) = 0$ in $\mathcal{D}_k$. Therefore, estimates of $\tau(\dist_i)$ can be formed for each interval as $\bar{\tau}_j \equiv \overline{\Delta Y}_j - \overline{\Delta Y}_k$. The results of \citet{Cattaneo_Crump_Farrell_Feng_2019} show the large-sample asymptotics of the estimates $\bar{\tau}_j$ which allow valid inference to be performed on these estimates.  
+If a distance $d_c$ satisfies \nameref{assum:parallel} and \ref{assum:dt_weak}, the mean within the last ring $\mathcal{D}_k$ will estimate $\lambda$ as the number of bins $L \to \infty$. The reason for this is simple, as $L \to \infty$, the last bin will have the left end-point $> d_t$ and therefore $\tau(\dist) = 0$ in $\mathcal{D}_L$. Under local parallel trends, the last ring will therefore estimate $\lambda$. Therefore, estimates of $\tau(\dist_i)$ can be formed for each interval as $\hat{\tau}_j \equiv \overline{\Delta Y}_j - \overline{\Delta Y}_L$. 
+
+\begin{proposition}[Non-parametric Identification]\label{prop:np_identification}  
+    Given that units follow model (\ref{eq:model}) and $d_c$ satisfies \nameref{assum:parallel} and assumption (\ref{assum:dt_weak}), as $n$ and $L \to \infty$ 
+
+    \begin{align*}
+        \hat{\tau} &\equiv \sum_{i=1}^L \hat{\tau}_j 1_{i \in \mathcal{D}_j} \to^{unif} \tau(\dist)s
+    \end{align*}
+
+    where $d_j$ corresponds to the $F^{-1}(D_j)$.
+\end{proposition}
+
+There are a few distinct advantages to this method. First, non-parametric estimation allows for a much more mild assumption regarding treatment effects. As discussed in \autoref{sec:example}, specifying $d_t$ exactly correctly is important to identify the average treatment effect among the effected in the parametric estimator. The nonparametric estimator only requires that treatment effects become zero before $d_c$, i.e. that such a $d_t$ exists. However, the estimator would no longer identify the treatment effect curve under the milder \nameref{assum:parallel_weak} assumption. Therefore, a researcher should justify explicity the assumption that, within the $d_c$ ring, every unit is subject to the same trend. This is most likely to be satisfied on a very local level and not very plausible in the case of units being counties, for example.
+
+Second, the non-parametric approach allows estimation of the treatment effect curve whereas the indicator approach, \emph{at best}, can only estimate an \emph{average} effect among units experiencing effects. The treatment effect curve allows researcher to understand differences in treatment effect across distance. For example, typically one would assume treatment effects shrink over distance and evidence of this from the non-parametric approach can strengthen a causal claim. In some cases, such as a negative hyper-local shock and a postivie local shock (e.g. a local bus-stop), the treatment effect can even change sign across distances. In this case, the average effect could be near zero even though there are significant effects occuring. 
+
+Last, plotting estimates $\hat{\tau}_j$ can provide visual evidence for the underlying \nameref{assum:parallel} assumption. Typically, treatment effect will stop being experienced far enough away from $d_c$ that some estimates of $\hat{\tau}_j$ with $j$ `close to' $L$ will provide informal tests for parallel trends holding. \autoref{fig:lr} provide an example where plotting of $\hat{\tau}_j$ provide strong evidence in support of local parallel trends as it appears that after some distance, average effects are consistetly centered around zero. 
+
+% ------------------------------------------------------------------------------
+\subsection{Estimation and Inference}
+% ------------------------------------------------------------------------------
+
+The above proposition shows that the series estimator will consistenly estimate the treatment effect curve, $\tau(\dist)$ as the number of bins $L$ and the number of observations $n$ both go to infinity. In finite-samples though, we will have a fixed $L$ and hence a fixed set of treatment effect estimates $\{ \tau_1, \dots, \tau_{L}\}$ with $\tau_L \equiv 0$ by definition. The estimates $\hat{\tau}_j$ are approximately equal to $\condexpec{\tau(\dist)}{\dist \in \mathcal{D}_j}$ or the average treatment effect within the interval $\mathcal{D}_j$.
+
+The choice of $L$ in finite samples is not entirely clear. \citet{Cattaneo_Crump_Farrell_Feng_2019} derive the IMSE-optimal choice of $L$ which is a completely data-driven choice. The optimal $L$ is driven by two competing terms in the IMSE formula. On the one hand, as $L$ increases, the conditional expectation function is allowed to vary more across values of $\dist$ and hence bias of the estimator decreases. However, larger values of $L$ increase the variance of the estimator. Balancing this trade-off depends on the shape and curvature of $\tau(\dist)$. The resulting choice of $L^*$ and the use of quantiles of the data allows a completely data-driven choice of the number of rings and their endpoints which allows for estimation in a principled and objective way. This principled estimator removes researcher-incentives to search across choices of rings to provide the best evidence. 
+
+For a given $L^*$, \citet{Cattaneo_Crump_Farrell_Feng_2019} show the large-sample asymptotics of the estimates $\overline{\Delta Y}_j$ and provide robust standard errors for the conditional means that account for the additional randomness due to quantile estimation. Since our estimator is a difference in means, standard errors on our estimate $\hat{\tau}_j$ are given by $\sqrt{\sigma^2_j + \sigma^2_L}$, where $\sigma_j$ is the standard error recommended by \citet{Cattaneo_Crump_Farrell_Feng_2019}. These standard errors are produced by the Stata/R package \texttt{binsreg}. Inference can be done by using the estimated t-stat with the standard normal distribution.
+
+
+
+
+% ------------------------------------------------------------------------------
+\section{Application to Neighborhood Effects of Crime Risk}
+% ------------------------------------------------------------------------------
+
+To highlight the advantages of my proposed estimator, I revisit the analysis of \citet{Linden_Rockoff_2008}. This paper analyzes the effect of a sex offender moving to a neighborhood on home prices. This paper uses the ring method with treated homes being defined as being within $1/10^{th}$ of the sex offender's home and the control units being between $1/10^{th}$ and $1/3^{rd}$ of a mile from the home. The authors make a case for the ring method by arguing that \emph{within a neighborhood}, \nameref{assum:parallel} holds since they are looking in such a narrow area and purchasing a home is difficult to be precisely located with concurrent hyper-local shocks. 
+
+
+\begin{figure}[htb!]
+    \caption{Price Gradient of Distance from Offender}\label{fig:lr_nonparametric}
+
+
+    \begin{subfigure}{0.33\textwidth}
+        \caption{Bandwidth of 0.025}
+    \end{subfigure}
+    \begin{subfigure}{0.33\textwidth}
+        \caption{Bandwidth of 0.075}
+    \end{subfigure}
+    \begin{subfigure}{0.33\textwidth}
+        \caption{Bandwidth of 0.125}
+    \end{subfigure}
+    
+    \vspace{-3mm}
+    \includegraphics[width=\textwidth]{../../figures/linden_rockoff_nonparametric.pdf}
+    
+
+    {\footnotesize{\it Notes:} This figure plots estimates of home prices in the year before and the year after the arrival of a sex offender estimated using a Local Polynomial Kernel Density estimation with an Epanechnikov kernel. Panel (b) recreates Figure 2 from \citet{Linden_Rockoff_2008} and the other panels change the bandwidth.}
+\end{figure}
+
+As for the choice of the treatment ring, there is little \emph{a priori} reasons to know how far the effects of sex offender arrival will extend in the neighborhood. The authors provide graphical evidence of non-parametric estimates of the conditional mean home price at different distances in the year before and the year after the arrival of a sex offender. The published plot can be seen in Panel (b) of \autoref{fig:lr_nonparametric}. They `eyeball' the point at which the two estimates are approximately equal to decide how far treatment effects extend. However, this approach is less precise than it may seem. Panels (a) and (c) show that changing the bandwidth for the kernel density estimator will produce very different guesses at how far treatment effects extend. My proposed estimator works in a data-driven way that does not require these ad-hoc decisions.
+
+The standard rings approach is equivalent to my proposed method with two rings: $\mathcal{D}_1$ being the treated homes between 0 and 0.1 miles away and $\mathcal{D}_2$ being the control homes between 0.1 and 0.3 miles away. The average change among $\mathcal{D}_2$ estimates the counterfactual trend and the average change among $\mathcal{D}_1$ minus the estimated counterfactual trend serves as the treatment effect. Panel (a) of \autoref{fig:lr} shows the basic results of their difference-in-differences analysis which plots estimates $\hat{\tau}_j$ for $j = 1,2$.  On average, homes between 0 and 0.1 miles decline in value by about 7.5\% after the arrival of a sex offender. \emph{As an assumption} of the rings method, homes between 0.1 and 0.3 miles away are not affected by a sex offender arrival. The choice of 0.1 miles is an untestable assumption and as seen above the evidence provided is highly dependent on the choice of bandwidth parameter. My proposed estimator does not require a specific choice for a `treated' area.
+
+\begin{figure}[tb!]
+    \caption{Effects of Offender Arrival on Home Prices \citep{Linden_Rockoff_2008}}\label{fig:lr}
+
+    \begin{subfigure}{\textwidth}
+        \caption{Indicator Approach}
+        \centering
+        \vspace{-2.5mm}
+        \includegraphics[width=\textwidth]{../../figures/linden_rockoff_did.pdf}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{\textwidth}
+        \caption{Non-parametric Approach}
+        \centering
+        \vspace{-2.5mm}
+        \includegraphics[width=\textwidth]{../../figures/linden_rockoff.pdf}
+    \end{subfigure}
+
+    {\footnotesize{\it Notes:} This figure plots the estimated change in home prices after the arrival of a registered sex offender as a function of distance from offender. Each line plots $\hat{\tau}_j = \overline{\Delta Y}_j - \overline{\Delta Y}_l $ with associated standard errors. Panel (a) shows an estimate from Equation \ref{eq:ring_method} with a treatment distance of $1/10^{th}$ miles and a control distance of $1/3^{rd}$ mile. Panel (b) shows the non-parametric estimate of $\tau(\dist_i)$ proposed in \autoref{sec:lspartition}.}
+\end{figure}
+
+Panel (b) of \autoref{fig:lr} applies the non-parametric approach described in \autoref{sec:lspartition}. Two differences in results occur. First, homes in the two closest rings i.e. within a few hundred feet, are most affected by sex-offender arrival with an estimated decline of home value of around 20\%. homes a bit further away but still within in Linden and Rockoff's `treated' sample do not experience statistically significant treatment effects. As discussed above, Linden and Rockoff's estimate of $\bar{\tau}$ is attenuated towards zero because of the inclusion of homes with little to no treatment effects, leading them to understate the effect of arrival on home prices. The non-parametric approach improves on answering this question by providing a more complete picture of the treatment effect curve. The magnitude of treatment effects decrease over distance, providing additional evidence that the arrival causes a drop in home prices.\footnote{This is similar to estimating a dose-response function as evidence supporting a causal mechanism.} 
+
+The second advantage of this approach is that the produced figure provides an informal test of the local parallel trends assumption. After 0.1 miles, the estimated treatment effect curve becomes centered at zero consistently. This implies that units within each ring have the same estimated trend as the outer most ring, providing suggestive evidence that homes in this neighborhood are subject to the same trends. This is not a formal test as it could be the case that the true treatment effect curve, $\tau(\dist)$ is perfectly cancelling out with the counterfactual trends curve $\lambda(\dist)$ producing near zero estimates, but this is a knive's edge case. 
+
+
+
+% ------------------------------------------------------------------------------
+\section{Discussion}
+% ------------------------------------------------------------------------------
+
+This article formalizes a common applied identification strategy that has a strong intuitive appeal. When treatment effects of shocks are experienced in only part of an area that would otherwise be on a common neighborhood-trend, difference-in-differences comparisons within a neighborhood can identify treatment effects. However, this paper shows that the typical \emph{estimator} for treatment effects requires a very strong assumption and returns only an average treatment effect among affected units when this assumption holds. 
+
+This article then proposes an improved estimator that relies on non-parametric series estimators. The non-parametric estimator allows for estimation of the treatment effect at different distances from treatment, similar to a dose-response function, which can allow better understanding of \emph{who} is experiencing effects and how this changes across `exposure' to a shock. More, in some cases it can provide explanation for null results. For example, if a bus station creates negative externalities for apartments that border the station but positive externalities for apartments within walking distance, the average effect could be zero. However, non-parametric estimation would reveal the two effects seperately.
+
 
 % ------------------------------------------------------------------------------
 \newpage~\bibliography{references.bib}
 % ------------------------------------------------------------------------------
+
+% ------------------------------------------------------------------------------
+\appendix 
+% ------------------------------------------------------------------------------
+
+% ------------------------------------------------------------------------------
+\section{Proofs}
+\label{sec:proofs}
+% ------------------------------------------------------------------------------
+
+% ------------------------------------------------------------------------------
+\subsection{Proof of Proposition \ref{prop:np_identification}}
+% ------------------------------------------------------------------------------
+
+\begin{proof}
+    \ Note that $L \to \infty$ implies $d_t \leq F_n^{-1}(\frac{L-1}{L})$ by assumption (\ref{assum:dt_weak}). This implies $\overline{\Delta Y}_L \to^p \lambda$ as $n \to \infty$ by assumption (\ref{assum:dt_weak}). 
+    
+    From assumption (\ref{assum:parallel}) and from our model (\ref{eq:model}), we have
+    \begin{align*}
+        \hat{\tau}_j &= \overline{\Delta Y}_j - \overline{\Delta Y}_L \\
+        &\to^p \condexpec{\tau(\dist)}{\dist \in \mathcal{D}_j} + \lambda - \lambda \\
+        &= \condexpec{\tau(\dist)}{\dist \in \mathcal{D}_j}
+    \end{align*}
+
+    As $L \to \infty$ and $n \to \infty$, we have that $\mathcal{D}_j$ approaches a set containing a singular point, say $d_j$. Therefore 
+    $$ 
+        \hat{\tau}_j \to^p \condexpec{\tau(\dist)}{\dist = d_j}
+    $$
+
+    The sum of $\hat{\tau}_j$ therefore approach the conditional expectation function of $\tau(\dist)$ pointwisely. See \citet{Cattaneo_Farrell_Feng_2019} for proof of uniform convergence.
+\end{proof}
+
+
+
+
+
+% ------------------------------------------------------------------------------
+% \section{Repeated Cross-Sections}
+% ------------------------------------------------------------------------------
+
+% TODO: Repeated Cross-section
 
 
 \end{document}
