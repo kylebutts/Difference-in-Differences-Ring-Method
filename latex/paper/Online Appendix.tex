@@ -1,0 +1,114 @@
+\documentclass[10pt]{article}
+
+% Include Theme
+\input{preamble.tex}
+
+% \maketitle info
+\title{Online Appendix for: Difference-in-Differences with Geocoded Microdata}
+\author{\href{https://kylebutts.com/}{Kyle Butts}\thanks{University of Colorado, Boulder. Email: \href{mailto:kyle.butts@colorado.edu}{kyle.butts@colorado.edu}.} % \ and Other Author}
+}
+\date{\today}
+
+\newcommand{\dist}{\text{Dist}}
+
+% pdf info
+\hypersetup{pdftitle={Example Paper}, pdfauthor={Kyle Butts}}
+
+\begin{document}
+\maketitle
+
+% ------------------------------------------------------------------------------
+\section{Cross-Sectionsal Data}
+% ------------------------------------------------------------------------------
+
+In the case of cross sectional data, we have individuals $i$ that appear in the data in period $t(i) \in \{0,1\}$. However, since we no longer are able to observe units in both periods, we are not able to take first differences. Our model therefore will have a $\lambda$ term for both periods. Therefore, $\lambda$ includes the average of $\mu_i$, covariates, and period shocks at a given distance.
+
+\begin{equation}\label{eq:model_rc}
+    Y_{i} = \tau(\dist_i) \one_{t(i) = 1} + \lambda_{t(i)}(\dist_i) + \nu_{it}.  
+\end{equation}
+
+The parallel trends assumption must be modified now in the case of cross sections:
+
+\begin{assumption}[Local Parallel Trends (RC)]\label{assum:parallel_rc}
+    For a distance $\bar{d}$, we say that `local parallel trends' hold if for all positive $d, d' \leq \bar{d}$, then $\lambda_1(d) - \lambda_0(d) = \lambda_1(d') - \lambda_0(d')$.
+\end{assumption}
+
+\begin{assumption}[Average Parallel Trends (RC)]\label{assum:parallel_weak_rc}
+    For a pair of distances $d_t$ and $d_c$, we say that `average parallel trends' hold if $\condexpec{\lambda_1(d)}{0 \leq d \leq d_t} - \condexpec{\lambda_0(d)}{0 \leq d \leq d_t} = \condexpec{\lambda_1(d)}{d_t < d \leq d_c} - \condexpec{\lambda_0(d)}{d_t < d \leq d_c}$.
+\end{assumption}
+
+The parallel trends assumption is a bit more complicated now and is theoretically more strict. \nameref{assum:parallel_rc} still require changes in outcomes over time for a given unit $i$ must be constant across distance (or on average in the case of \nameref{assum:parallel_weak_rc}). However since the composition of units can change over time, this also requires that the average of individual fixed effects must be constant across time. This is well understood in the hedonic pricing literature that the composition of homes being sold can not change over time for identification (e.g. \citet{Linden_Rockoff_2008}).
+
+For completeness, I rewrite the other necessary assumption
+\begin{assumption}[Correct $d_t$]\label{assum:dt}
+    A distance $d_t$ satisfies this assumption if (i) for all $d \leq d_t$, $\tau(d) > 0$ and for all $d > d_t$, $\tau(d) = 0$ and (ii) $F(d_c) - F(d_t) > 0$.
+\end{assumption}
+
+The ring estimate in the case of cross-sections is given by:
+\begin{equation}\label{eq:ring_method}
+    \Delta Y_{i} = \beta_0 + \beta_1 \one_{i \in \mathcal{D}_c} \one_{t(i) = 1} + \beta_2 \one_{i \in \mathcal{D}_t} \one_{t(i) = 0} + \beta_4 \one_{i \in \mathcal{D}_t} \one_{t(i) = 1} + u_{it}.
+\end{equation}
+
+\begin{proposition}[Decomposition of Ring Estimate (RC)]\label{prop:ring_decomp_rc}  
+    Given that units follow model (\ref{eq:model_rc}),
+    \begin{enumerate}
+        \item[(i)] The estimate of $\beta_4$ in (\ref{eq:ring_method}) has the following expectation:
+        \begin{align*}
+            \expec{\hat{\beta}_4} &= \condexpec{\Delta Y_{it}}{\mathcal{D}_t} - \condexpec{\Delta Y_{it}}{\mathcal{D}_c} \\
+            &=  \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}} \\
+            &\quad + ( \condexpec{\lambda_1(\dist)}{\mathcal{D}_t, t(i) = 1} - \condexpec{\lambda_0(\dist)}{\mathcal{D}_t, t(i) = 0} ) \\
+            &\quad - ( \condexpec{\lambda_1(\dist)}{\mathcal{D}_c, t(i) = 1} - \condexpec{\lambda_0(\dist)}{\mathcal{D}_c, t(i) = 0} )   \\
+        \end{align*}
+        
+        \item[(ii)] If $d_c$ satisfies \nameref{assum:parallel_rc} or, more weakly, if $d_t$ and $d_c$ satisfy \nameref{assum:parallel_weak_rc}, then
+        \[ 
+            \expec{\hat{\beta}_4} = 
+            \underbrace{\condexpec{\tau(\dist)}{\mathcal{D}_t} - \condexpec{\tau(\dist)}{\mathcal{D}_c} }_{\text{Difference in Treatment Effect}}.
+        \] 
+    
+        \item[(iii)] If $d_c$ satisfies \nameref{assum:parallel_rc} and $d_t$ satisfies Assumption \ref{assum:dt}, then
+        \[ 
+            \expec{\hat{\beta}_4} = \bar{\tau}.
+        \]
+    \end{enumerate}
+\end{proposition}
+
+\begin{proof}
+    \ With some algebraic manipulation, we can rewrite our difference-in-differences estimator as
+    \begin{align*}
+        &\left(\condexpec{Y_{i}}{\mathcal{D}_t, t(i) = 1} - \condexpec{Y_{i}}{\mathcal{D}_t, t(i) = 0}\right) - \left(\condexpec{Y_{i}}{\mathcal{D}_c, t(i) = 1} - \condexpec{Y_{i}}{\mathcal{D}_c, t(i) = 0})\right) \\
+        &\quad = \left(\condexpec{ \tau(\dist_i) + \lambda_1(\dist_i) + \nu_{i1}}{\mathcal{D}_t, t(i) = 1} - \condexpec{\lambda_0(\dist_i) + \nu_{i0}}{\mathcal{D}_t, t(i) = 0}\right) \\
+        &\quad\quad - \left(\condexpec{ \tau(\dist_i) + \lambda_1(\dist_i) + \nu_{i1}}{\mathcal{D}_c, t(i) = 1} - \condexpec{\lambda_0(\dist_i) + \nu_{i0}}{\mathcal{D}_c, t(i) = 0}\right) \\
+        &\quad = \condexpec{\tau(\dist_i)}{\mathcal{D}_t, t(i) = 1} - \condexpec{\tau(\dist_i)}{\mathcal{D}_c, t(i) = 0} + \\
+        &\quad\quad \left( \condexpec{\lambda_1(\dist_i)}{\mathcal{D}_t, t(i) = 1} - \condexpec{\lambda_0(\dist_i)}{\mathcal{D}_t, t(i) = 0} \right) \\
+        &\quad\quad - \left( \condexpec{\lambda_1(\dist_i)}{\mathcal{D}_c, t(i) = 1} - \condexpec{\lambda_0(\dist_i)}{\mathcal{D}_c, t(i) = 0} \right),
+    \end{align*}
+    where the terms consisting of $\nu_{it}$ cancel out as they are uncorrelated with distance. Propositions (ii) and (iii) follow the same arguments as in the panel case.
+\end{proof}
+
+Part (i) of this theorem shows that under no parallel trends assumption, the `Difference in Trends' term becomes the change in $\lambda_t$ for the treated ring minus the change in for the control ring. As discussed above, this change in lambdas can be do to period specific shocks or changes in the composition of units observed in each period.
+
+% ------------------------------------------------------------------------------
+\subsection{Nonparametric Estimation}
+% ------------------------------------------------------------------------------
+
+Since we can no longer perform a single nonparmaetric regression on first differences in the context of cross-sections, our nonparametric estimator must be adjusted. The modified procedure will fit a nonparametric estimate of $\condexpec{Y_i}{\dist_i, t}$ seperately for $t = 0$ and $t = 1$ with a restriction that the bin intervals $\{ \mathcal{D}_1, \dots, \mathcal{D}_{L} \}$ must be the same in both samples.\footnote{The number of  intervals are decided based on a different IMSE condition described in \citet{Cattaneo_Crump_Farrell_Feng_2019} and the quantiles are calculated using the distribution of distances in both periods.} Then, for each distance bin we calculate an estimate of $\bar{Y}_{j,t}$ which corresponds to the sample average of observations in period $t$ in bin $\mathcal{D}_j$. 
+
+Then estimates of $\tau_j$ can be formed as
+\[
+    \hat{\tau}_j = \left[\bar{Y}_{j,1} - \bar{Y}_{j,0}\right] - \left[\bar{Y}_{L,1} - \bar{Y}_{L,0}\right],
+\]
+where, as before, the change in trends in the last ring serve as an estimate for the counterfactual trend. Under \nameref{assum:parallel_rc}, estimates of $\hat{tau}_j$ are consistent for $\condexpec{\tau(\dist_i)}{i \in \mathcal{D}_j}$ and the treatment effect curve converges uniformly to the treatment effect curve $\tau(d)$. 
+
+Standard errors are formed similarly as before, but is the difference of four means so they can be formed as $\sqrt{\sigma_{j,1}^2 + \sigma_{j,0}^2 + \sigma_{L,1}^2 + \sigma_{L,0}^2}$. These individual estimates and standard errors can be produced by the Stata/R package \texttt{binsreg}. 
+
+
+
+
+
+% ------------------------------------------------------------------------------
+\newpage~\bibliography{references.bib}
+% ------------------------------------------------------------------------------
+
+
+\end{document}

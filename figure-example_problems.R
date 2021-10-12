@@ -432,6 +432,9 @@ line <- line %>% mutate(
         labs(x = "Distance to Treatment", y = "Change in Y"))
 
 
+library(patchwork)
+p_did / p_partition
+
 ggsave("figures/slides-example_did.pdf", p_did, width = 8, height = 6, bg = "white")
 ggsave("figures/slides-example_partition.pdf", p_partition, width = 8, height = 6, bg = "white")
 
