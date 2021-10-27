@@ -5,6 +5,11 @@
 .Rapp.history
 .Renviron
 
+## Submissions
+submissions/*
+
+## Notes
+notes.md
 
 ## Core latex/pdflatex auxiliary files:
 /latex/.vscode

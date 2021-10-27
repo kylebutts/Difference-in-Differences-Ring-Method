@@ -7,25 +7,9 @@ library(tidyverse)
 library(glue)
 library(sf)
 library(patchwork)
-
-# Load Custom Theme
-source("https://raw.githubusercontent.com/kylebutts/templates/master/ggplot_theme/theme_kyle.R")
-
-# ggpreview
-ggpreview <- function(..., device = "png", cairo = TRUE) {
-    fname <- tempfile(fileext = paste0(".", device))
-
-    if (cairo & device == "pdf") {
-        ggplot2::ggsave(filename = fname, device = cairo_pdf, ...)
-    } else if (cairo & device == "png") {
-        ggplot2::ggsave(filename = fname, device = device, type = "cairo", ...)
-    } else {
-        ggplot2::ggsave(filename = fname, device = device, ...)
-    }
-
-    system2("open", fname)
-    invisible(NULL)
-}
+library(fixest)
+# theme_kyle and ggpreview
+library(kfbmisc)
 
 
 
@@ -54,7 +38,7 @@ treat_ring <- st_buffer(treat, dist = 0.2)
 control_ring <- st_difference(st_buffer(treat, dist = 0.5), treat_ring)
 
 # Random sample of points
-points <- st_sf(id = 1:2000, st_sample(rectangle, 2000)) %>%
+points <- st_sf(id = 1:2000, st_sample(rectangle, 2000)) |>
     mutate(
         group = case_when(
             st_within(., treat_ring, sparse = F) ~ "Treated",
@@ -69,7 +53,8 @@ points <- st_sf(id = 1:2000, st_sample(rectangle, 2000)) %>%
     geom_sf(data = treat_ring, fill = NA, alpha = 0.2) +
     geom_sf(data = control_ring, fill = NA, alpha = 0.2) +
     geom_sf(data = points, mapping = aes(color = group, shape = group)) +
-    geom_sf(data = treat, color = "black", shape = 3, size = 4) +
+    geom_sf(data = treat, color = "white", shape = 17, size = 4) +
+    geom_sf(data = treat, color = "black", shape = 17, size = 3) +
     coord_sf(datum = NULL) +
     scale_color_manual(
         values = c("Treated" = "#6A6599", "Control" = "#79AF97"),
@@ -95,12 +80,12 @@ ggsave("figures/example_id.pdf", plot_id, dpi = 300, width = 5, height = 5, bg =
 
 set.seed(20210708)
 
-df <- tibble(id = 1:10000) %>%
+df <- tibble(id = 1:10000) |>
     # Generate Treatment and Distance
     mutate(
         dist = runif(n(), 0, 1.5),
         dist = dist
-    ) %>%
+    ) |>
     # Treatment Effects
     mutate(
         spill1 = 1.5 * exp(-2.3 * dist) * (dist <= 0.75),
@@ -111,26 +96,26 @@ df <- tibble(id = 1:10000) %>%
     )
 
 
-df_long <- df %>% pivot_longer(
+df_long <- df |> pivot_longer(
     cols = c(`Treatment Effect`, `Counterfactual Trend`, `Observed Change`)
 )
 
-true_te <- df %>% filter(dist <= 0.75) %>% pull(`Treatment Effect`) %>% mean()
+true_te <- df |> filter(dist <= 0.75) |> pull(`Treatment Effect`) |> mean()
 
 
 # Data-generating Process Plot
 
 # avoid the line in the drop
 df_long <- bind_rows(
-    df_long %>% filter(dist <= 0.75),
+    df_long |> filter(dist <= 0.75),
     tibble(dist = 0.75, name = "Treatment Effect", value = NA),
-    df_long %>% filter(dist > 0.75),
+    df_long |> filter(dist > 0.75),
 )
 
 (plot_dgp <- ggplot() +
         # Potential outcomes
         geom_line(
-            data = df_long %>% filter(name != "Observed Change"),
+            data = df_long |> filter(name != "Observed Change"),
             mapping = aes(x = dist, y = value, color = name),
             size = 1.5
         ) +
@@ -161,14 +146,14 @@ df_long <- bind_rows(
 # ---- Plot function -----------------------------------------------------------
 
 plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F) {
-    df <- df %>%
+    df <- df |>
         mutate(
             group = case_when(
                 dist <= dist_t ~ "Treated",
                 dist <= dist_c ~ "Control",
                 TRUE ~ NA_character_
             )
-        ) %>%
+        ) |>
         drop_na(group)
 
     mean_t <- mean(df[df$group == "Treated", ]$`Observed Change`)
@@ -199,9 +184,9 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
 
     # avoid the line in the drop
     df_long <- bind_rows(
-        df_long %>% filter(dist <= 0.75),
+        df_long |> filter(dist <= 0.75),
         tibble(dist = 0.75, name = "Treatment Effect", value = NA),
-        df_long %>% filter(dist > 0.75),
+        df_long |> filter(dist > 0.75),
     )
 
     (plot <- ggplot() +
@@ -213,17 +198,17 @@ plot_est <- function(df, df_long, dist_t, dist_c, title = NULL, include_labs = F
         ) +
         # Potential outcomes
         geom_line(
-            data = df_long %>% filter(name != "Observed Change"),
+            data = df_long |> filter(name != "Observed Change"),
             mapping = aes(x = dist, y = value, color = name),
             size = 1.5
         ) +
         # Mean of treated and untreated
         geom_line(
-            data = avg_pt %>% filter(group == "Treat"), mapping = aes(x = x, y = y),
+            data = avg_pt |> filter(group == "Treat"), mapping = aes(x = x, y = y),
             color = "#6A6599", size = 1.1
         ) +
         geom_line(
-            data = avg_pt %>% filter(group == "Control"), mapping = aes(x = x, y = y),
+            data = avg_pt |> filter(group == "Control"), mapping = aes(x = x, y = y),
             color = "#79AF97", size = 1.1
         ) +
         # Treated and Control Unit Labels
@@ -384,19 +369,21 @@ line <- tibble(
 est <- binsreg::binsreg(
     y = df_binsreg$value, x = df_binsreg$dist, binspos = "es",
     # 0th degree polynomial and 0th degree standard errors
-    line = c(0,0), ci = c(0,0)
+    line = c(0,0), ci = c(3,3)
 )
 
-line <- tibble(est$data.plot$`Group Full Sample`$data.line) %>%
+
+# Converting things into a nice format
+line <- tibble(est$data.plot$`Group Full Sample`$data.line) |>
     select(x, bin, fit = fit)
 
-se <- tibble(est$data.plot$`Group Full Sample`$data.ci) %>%
-    mutate(se = (ci.r - ci.l)/2/1.96) %>%
+se <- tibble(est$data.plot$`Group Full Sample`$data.ci) |>
+    mutate(se = (ci.r - ci.l)/2/1.96) |>
     select(bin, se)
 
 line <- left_join(line, se, by = c("bin"))
 
-line <- line %>%
+line <- line  |>
     mutate(
         tau = fit,
         ci_lower = tau - 1.96 * se,
@@ -404,12 +391,12 @@ line <- line %>%
     )
 
 # Counterfactual Trend
-count_trend <- line %>%
-    dplyr::filter(bin == max(bin) & !is.na(tau)) %>%
-    slice(1) %>%
-    .[["tau"]]
+count_trend <- line |>
+    dplyr::filter(bin == max(bin) & !is.na(tau)) |>
+    slice(1) |>
+    pull(tau)
 
-line <- line %>% mutate(
+line <- line |> mutate(
     tau = tau - count_trend,
     ci_lower = ci_lower - count_trend,
     ci_upper = ci_upper - count_trend,
@@ -437,6 +424,7 @@ p_did / p_partition
 
 ggsave("figures/slides-example_did.pdf", p_did, width = 8, height = 6, bg = "white")
 ggsave("figures/slides-example_partition.pdf", p_partition, width = 8, height = 6, bg = "white")
+
 
 
 
