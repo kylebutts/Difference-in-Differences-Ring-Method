@@ -10,7 +10,9 @@ library(kfbmisc)
 library(patchwork)
 library(lpridge)
 library(KernSmooth)
+library(data.table)
 
+source(here("helper-nonparametric_rings_estimator.R"))
 
 raw <- haven::read_dta(here("data", "linden_rockoff.dta"))
 
@@ -181,59 +183,8 @@ ggsave(here("figures", "linden_rockoff_did.pdf"), width = 8, height = 2.5)
 
 # ---- binsreg -----------------------------------------------------------------
 
-`Log Price` <- df_short$log_price
-`Distance to Offender` <- df_short$distance
-`Post Move` <- df_short$post
 
-
-# Symmetric Confidence Intervals
-est <- binsreg::binsreg(
-    y = `Log Price`, x = `Distance to Offender`, by = `Post Move`, samebinsby = T,
-    # 0th degree polynomial and 0th degree standard errors
-    line = c(0,0), ci = c(0,0)
-)
-
-post_line <- tibble(est$data.plot$`Group Post`$data.line) %>%
-    select(x, bin, post_fit = fit)
-pre_line  <- tibble(est$data.plot$`Group Pre`$data.line) %>%
-    select(x, bin, pre_fit = fit)
-
-post_se <- tibble(est$data.plot$`Group Post`$data.ci) %>%
-    mutate(post_se = (ci.r - ci.l)/2/1.96) %>%
-    select(bin, post_se)
-
-pre_se  <- tibble(est$data.plot$`Group Pre`$data.ci) %>%
-    mutate(pre_se = (ci.r - ci.l)/2/1.96) %>%
-    select(bin, pre_se)
-
-post_line <- left_join(post_line, post_se, by = c("bin"))
-pre_line <- left_join(pre_line, pre_se, by = c("bin"))
-
-line <- left_join(pre_line, post_line, by = c("x", "bin"))
-
-line <- line %>%
-    mutate(
-        tau = post_fit - pre_fit,
-        se = sqrt(pre_se^2 + post_se^2),
-        ci_lower = tau - 1.96 * se,
-        ci_upper = tau + 1.96 * se
-    )
-
-# Counterfactual Trend
-count_trend <- line %>%
-    dplyr::filter(bin == max(bin) & !is.na(tau)) %>%
-    .[["tau"]]
-
-line <- line %>% mutate(
-    tau = tau - count_trend,
-    ci_lower = ci_lower - count_trend,
-    ci_upper = ci_upper - count_trend,
-)
-
-line[line$bin == max(line$bin), "se"] <- 0
-line[line$bin == max(line$bin), "ci_lower"] <- 0
-line[line$bin == max(line$bin), "ci_upper"] <- 0
-
+line <- nonparametric_ring_cs(df_short$log_price, df_short$distance, df_short$post == "Post")
 
 (p <- ggplot() +
         # 0
