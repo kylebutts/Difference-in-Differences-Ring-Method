@@ -96,6 +96,7 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
 \newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
 \newtheorem{example}{Example}
 
 
@@ -144,7 +145,7 @@
 \usepackage[explicit]{titlesec}
 
 \titleformat{\section}
-  {\Large \bf \color{navyblue}}
+  {\large \bf \color{navyblue}}
   {\thesection \,---}
   {0.25em}
   {#1}
@@ -210,7 +211,6 @@
 
 % Fix \input with tables
 % \input fails when \\ is at end of external .tex file
-
 \makeatletter
 \let\input\@@input
 \makeatother
@@ -222,7 +222,7 @@
 
 % Slighty more spacing between rows
 \usepackage{array}
-\renewcommand\arraystretch{1.1}
+\renewcommand\arraystretch{1.25}
 
 % Table with easy to use footnotes
 % \begin{threeparttable}
